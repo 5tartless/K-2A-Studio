@@ -2,7 +2,7 @@ from app.utils import CustomPyQt as qt, project_creator as pt
 from app.ui.menus.home_menu import HomeMenu
 from app.ui.menus.import_project_menu import ImportProjectMenu
 from app.ui.menus.create_project_menu import CreateProjectMenu
-from app.ui.menus.project_list import ProjectMenu
+from app.ui.menus.project_list import ProjectListMenu
 
 import sys
 
@@ -18,7 +18,7 @@ class K2A_App(qt.CMainWindow):
                                        args={"cssRelativePath": self.cssPath, "debug": self.debug}),
                     self.create_widget(CreateProjectMenu, "createProjectMenu", createVisible=False,
                                        args={"cssRelativePath": self.cssPath, "debug": self.debug}),
-                    self.create_widget(ProjectMenu, "projectMenu", createVisible=False, 
+                    self.create_widget(ProjectListMenu, "projectMenu", createVisible=False, 
                                         args={"cssRelativePath": self.cssPath, "debug": self.debug}))
         self.showMenu(0)
         
