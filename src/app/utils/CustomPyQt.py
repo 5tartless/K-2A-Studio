@@ -167,7 +167,7 @@ class AnimationPlayer(CCore):
     def __init__(self, *args):
         super().__init__(*args)
         self.isPlaying = False
-    def play(self, duration: int): self.isPlaying = True
+    def play(self): self.isPlaying = True
     def stop(self): self.isPlaying = False
 
 class AnimationPainter(AnimationPlayer, Qw.QWidget):
@@ -194,18 +194,27 @@ class AnimationFader(AnimationPlayer, Qw.QGraphicsOpacityEffect):
         self.setParent(parent)
         self.parent().setGraphicsEffect(self)
         self.faderPlayer = QtCore.QPropertyAnimation(self, b"opacity")
+        
     def play(self, duration: int, startValue: int = 1, middleValue: int = 0, endValue: int = 1, skipEndValue: bool = False, middleFunction: callable = None,
             easingCurve: QtCore.QEasingCurve = QtCore.QEasingCurve.InOutQuad):
         self.setOpacity(startValue)
+        def end_value_finished(): self.isPlaying = False; self.faderPlayer.finished.disconnect(end_value_finished)
         def unfade():
             if middleFunction: middleFunction()
             self.faderPlayer.finished.disconnect(unfade)
-            if not skipEndValue: self.edit_widget(self.faderPlayer, setStartValue=middleValue, setEndValue=endValue, start=None)
+            if not skipEndValue: 
+                self.connect_signal((self.faderPlayer, ), {"finished": end_value_finished}, True)
+                self.edit_widget(self.faderPlayer, setStartValue=middleValue, setEndValue=endValue, start=None)
+            else: self.isPlaying = False
         self.connect_signal((self.faderPlayer, ), {"finished":unfade}, True)
         self.edit_widget(self.faderPlayer, setDuration=duration, setEasingCurve=easingCurve, setStartValue=startValue, setEndValue=middleValue)
 
         self.faderPlayer.start()
-    def stop(self): self.faderPlayer.stop()
+        super().play()
+
+    def stop(self): 
+        self.faderPlayer.stop()
+        super().stop()
 
 class setVar():
     def __init__(self, value: any, setterFunction: callable):
@@ -269,6 +278,9 @@ class CFrame(CCore, Qw.QFrame):
         for widget in self.widgets:
             self.get_widget(widget).setStyleSheet(ss)
             if isinstance(widget, CFrame): widget.setAllStyleSheet(ss)
+    
+    def addToLayout(self, items):
+        return super().addToLayout(self.get_widget(self.lname, "layouts"), items)
         
 class PollCLineEdit(CFrame):
     def __init__(self, *args, **kwargs):
@@ -277,7 +289,7 @@ class PollCLineEdit(CFrame):
         self.edit_widget(self.create_widget(kwargs.get("title_type", Qw.QLabel), "/title"))
         self.edit_widget(self.create_widget(Qw.QLineEdit, "/line-edit"))
 
-        self.addToLayout(self.get_widget(self.lname, "layouts"), ("/title", "/line-edit"))
+        self.addToLayout(("/title", "/line-edit"))
     
     def setPlaceholderText(self, txt: str):
         self.get_widget("/line-edit").setPlaceholderText(txt)
@@ -291,6 +303,3 @@ class PollCLineEdit(CFrame):
         return self.get_widget("/title")
     def getLineEdit(self) -> object:
         return self.get_widget("/line-edit")
-    
-    
-

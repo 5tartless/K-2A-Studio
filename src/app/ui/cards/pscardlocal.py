@@ -11,9 +11,7 @@ class PSCardLocal(qt.CFrame):
         self.create_widget(SelectDirectoryLocal, "/select-directory", args={"layout": qt.Qw.QVBoxLayout, "name": "/select-directory", "object_name": "main"})
         self.create_widget(ReviewDirectoryLocal, "/review-directory", args={"layout": qt.Qw.QVBoxLayout, "name": "/review-directory", "object_name": "main"})
         self.create_widget(qt.Qw.QStackedWidget, "/stack")
-        self.addToLayout(self.get_widget("/center/options/local", "layouts"), (
-            "/icon", "/title", "/subtitle", "/stack"
-        ))
+        self.addToLayout(("/icon", "/title", "/subtitle", "/stack"))
         
         self.get_widget("/stack").addWidget(self.get_widget("/select-directory"))
         self.get_widget("/stack").addWidget(self.get_widget("/review-directory"))
@@ -25,7 +23,7 @@ class SelectDirectoryLocal(qt.CFrame):
         self.edit_widget(self.create_widget(qt.Qw.QPushButton, "/button"), setObjectName="main-top", setText="Select Directory")
         self.connect_signal((self.get_widget("/button"),), {"clicked": lambda: self.select_clicked()})
 
-        self.addToLayout(self.get_widget("/select-directory", "layouts"), "/button")
+        self.addToLayout("/button")
     
     def select_clicked(self):
         path = qt.Qw.QFileDialog.getExistingDirectory(self, "Select Project Folder")
@@ -46,7 +44,7 @@ class ReviewDirectoryLocal(qt.CFrame):
         
 
         self.connect_signal((self.get_widget("/directory-poll").getTitle(),), {"clicked": lambda: self.get_path(qt.Qw.QFileDialog.getExistingDirectory(self, "Select Project Folder", self.path))})
-        self.addToLayout(self.get_widget("/review-directory", "layouts"), ("/directory-poll", "/directory-poll/result", "/button-box"))
+        self.addToLayout(("/directory-poll", "/directory-poll/result", "/button-box"))
     
     def get_path(self, path): #for qfiledialog
         self.path = self.path if not path else path
@@ -72,7 +70,7 @@ class ButtonBox(qt.CFrame):
         )}, {"clicked": lambda: self.cancel()}) )
         
         
-        self.addToLayout(self.get_widget("/button-box", "layouts"), ("/select", "/cancel"))
+        self.addToLayout(("/select", "/cancel"))
 
     def cancel(self):
         self.parent().get_widget("/directory-poll").getLineEdit().clear()
