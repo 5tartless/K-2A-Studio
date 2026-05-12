@@ -18,15 +18,15 @@ class K2A_App(qt.CMainWindow):
                                        args={"cssRelativePath": self.cssPath, "debug": self.debug}),
                     self.create_widget(CreateProjectMenu, "createProjectMenu", createVisible=False,
                                        args={"cssRelativePath": self.cssPath, "debug": self.debug}),
-                    self.create_widget(ProjectListMenu, "projectMenu", createVisible=False, 
+                    self.create_widget(ProjectListMenu, "projectListMenu", createVisible=False, 
                                         args={"cssRelativePath": self.cssPath, "debug": self.debug}))
-        self.showMenu(0)
+        self.showMenu(3)
         
 if __name__ == "__main__":
     pt.setup()
 
     # ui init
     window = qt.Qw.QApplication(sys.argv)
-    app = K2A_App(window, winSize=(1080,720), cssRelativePath="main/css/style.css", debug=True)
+    app = K2A_App(window, winSize=(1080,720), cssRelativePath="src/css/style.css", debug=True)
 
     sys.exit(window.exec())

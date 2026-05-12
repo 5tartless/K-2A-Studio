@@ -4,6 +4,10 @@
     margin: 0;
 }
 
+#scroll-bar{
+    background-color: white;
+}
+
 #main-top{
     background-color: rgba(163, 0, 231, 60);
     margin: 0;

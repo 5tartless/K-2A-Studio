@@ -9,7 +9,7 @@ class CloneRepo(qt.CFrame):
         self.edit_widget(self.create_widget(qt.Qw.QLabel, "/result"), setText="", setObjectName="main")
         self.edit_widget(self.create_widget(qt.Qw.QLabel, "/advice"), setText=self.wrapText("Note:\nYou are about to clone a github repository. This could take a while.", 50))
 
-        self.addToLayout(self.get_widget("/clone-repo", "layouts"), ("/title", "/url", "/result", "/buttons", "/advice"))
+        self.addToLayout(("/title", "/url", "/result", "/buttons", "/advice"))
     
     def clear(self):
         self.get_widget("/url").clear()
@@ -21,7 +21,7 @@ class ReviewRepo(qt.CFrame):
         self.edit_widget(self.create_widget(qt.Qw.QPushButton, "/import-repo"), setText="Clone Repository", setObjectName="main-top")
         self.connect_signal((self.get_widget("/import-repo"),), {"clicked": lambda: self.parent().setCurrentIndex(1)})
         
-        self.addToLayout(self.get_widget("/review-repo", "layouts"), "/import-repo")
+        self.addToLayout("/import-repo")
 
 class ButtonsCFrame(qt.CFrame):
     def __init__(self, *args, **kwargs):
@@ -32,7 +32,7 @@ class ButtonsCFrame(qt.CFrame):
         self.connect_signal((self.get_widget("/cancel"),self.get_widget("/confirm")),
                             ({"clicked": lambda: (pt.get_parent_recursive(self, 2).setCurrentIndex(0), self.parent().clear())},
                             {"clicked": lambda: pt.get_parent_recursive(self, 3).confirm_clone(str(self.parent().get_widget("/url").text()))}))
-        self.addToLayout(self.get_widget("/buttons", "layouts"), ("/confirm", "/cancel"))
+        self.addToLayout(("/confirm", "/cancel"))
 
 
 
@@ -54,9 +54,7 @@ class PSCardRepo(qt.CFrame):
         self.edit_widget(self.create_widget(qt.Qw.QLabel, "/subtitle"), setObjectName="main-top", setText="Cloud-Sync")
         self.edit_widget(self.create_widget(CloneRepo, "/clone-repo", args={"layout":qt.Qw.QVBoxLayout, "name": "/clone-repo", "object_name":"main"}))
         self.edit_widget(self.create_widget(ReviewRepo, "/review-repo", args={"layout":qt.Qw.QVBoxLayout, "name": "/review-repo", "object_name":"main"}))
-        self.addToLayout(self.get_widget("/center/options/repo", "layouts"), (
-            "/icon", "/title", "/subtitle", "/stack"
-        ))
+        self.addToLayout(("/icon", "/title", "/subtitle", "/stack"))
 
         self.get_widget("/stack").addWidget(self.get_widget("/review-repo"))
         self.get_widget("/stack").addWidget(self.get_widget("/clone-repo"))

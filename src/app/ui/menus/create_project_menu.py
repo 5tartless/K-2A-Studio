@@ -33,7 +33,7 @@ class CreateBox(qt.CFrame):
 
         self.edit_widget(self.create_widget(BottomButtons, "/bottom-buttons", args={"layout": qt.Qw.QHBoxLayout, "name": "/bottom-buttons", "object_name": "main"}))
 
-        self.addToLayout(self.get_widget("/center/create-box", "layouts"), ("/project-name", "/project-directory", "/project-directory/result", "-s1", "/bottom-buttons"))
+        self.addToLayout(("/project-name", "/project-directory", "/project-directory/result", "-s1", "/bottom-buttons"))
     
     def explore_pd(self, read_le: bool = False):
         line_edit = self.get_widget("/project-directory").getLineEdit()
@@ -93,7 +93,5 @@ class BottomButtons(qt.CFrame):
         )
 
 
-        self.addToLayout(self.get_widget("/bottom-buttons", "layouts"), (
-            "/create", "/export-github", "-s1", "/dependencies", "/cancel"
-        ))
+        self.addToLayout(("/create", "/export-github", "-s1", "/dependencies", "/cancel"))
     

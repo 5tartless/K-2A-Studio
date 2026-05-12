@@ -6,10 +6,12 @@ APP_DEFAULT_SETTINGS = {
     "projects": [
         #{}, {}
     ],
+    "rpid": -1,
 }
 PROJECT_DEFAULT_SETTINGS = {
     "path": None,
     "name": None,
+    "pid": None,
     "ai-context-path": None,
     "github-url": None
 }
@@ -43,6 +45,13 @@ def read_app_config() -> object:
 def write_app_config(new):
     with open(app_config_file, "w") as file:
         json.dump(new, file, indent=4)
+def list_projects() -> list[dict]:
+    app_config = read_app_config()
+    return app_config["projects"]
+
+def generate_project_id() -> int:
+    app_config = read_app_config()
+    return app_config["rpid"] + 1
 
 
 def get_cache_dir() -> str:
@@ -54,6 +63,7 @@ def get_cache_dir() -> str:
         return Path.home() / 'Library/Caches'
     else:  # Linux and others
         return Path(os.environ.get('XDG_CACHE_HOME', Path.home() / '.cache'))
+
 def get_app_config_folder() -> str:
     current_os = platform.system()
     config_directory = ""
@@ -147,6 +157,8 @@ def path_exists(path: str) -> bool:
 
 def create_project(data: dict):
     file_content = read_app_config()
+    data["pid"] = generate_project_id()
+    file_content["rpid"] += 1
     file_content["projects"].append(data)
     write_app_config(file_content)
 
