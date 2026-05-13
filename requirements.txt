@@ -4,5 +4,7 @@ idna==3.13
 PyQt5==5.15.11
 PyQt5-Qt5==5.15.18
 PyQt5_sip==12.18.0
+PyQtWebEngine==5.15.7
+PyQtWebEngine-Qt5==5.15.18
 requests==2.33.1
 urllib3==2.7.0

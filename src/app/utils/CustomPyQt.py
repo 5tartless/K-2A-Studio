@@ -1,4 +1,4 @@
-from PyQt5 import QtCore, QtWidgets as Qw, QtGui
+from PyQt5 import QtCore, QtWidgets as Qw, QtGui, QtWebEngineWidgets, QtWebChannel
 import os, sys
 
 class CCore():
@@ -139,6 +139,14 @@ class CMenu(CCore, Qw.QWidget):
         super().__init__(parent, **kwargs)
         if "cssRelativePath" in kwargs: self.cssStyle = self.get_style(kwargs["cssRelativePath"])
         if "debug" in kwargs: self.debug = kwargs["debug"]
+
+    def showEvent(self, a0):
+        return super().showEvent(a0)
+    
+    def hideEvent(self, a0):
+        return super().hideEvent(a0)
+    
+    
     def appear(self, **kwargs): self.show()
     def setAllStyleSheet(self, ss):
         for widget in self.widgets:
@@ -216,17 +224,17 @@ class AnimationFader(AnimationPlayer, Qw.QGraphicsOpacityEffect):
         self.faderPlayer.stop()
         super().stop()
 
-class setVar():
-    def __init__(self, value: any, setterFunction: callable):
+class SetVar():
+    def __init__(self, value: any, callback: callable):
         self._value = value
-        self._setterFunction = setterFunction
+        self._callback = callback
     @property
     def value(self): return self._value
     @value.setter
     def value(self, new_value):
         if new_value != self._value:
             self._value = new_value
-            self._setterFunction()
+            self._callback(self.value)
 
 class CTextEdit(Qw.QTextEdit):
     def __init__(self, parent = None, enterConnection: callable = None, triggeredOnTextChanged: list[callable] = None):
@@ -303,3 +311,14 @@ class PollCLineEdit(CFrame):
         return self.get_widget("/title")
     def getLineEdit(self) -> object:
         return self.get_widget("/line-edit")
+    
+class CBridge(QtCore.QObject):
+    def __init__(self, parent=None, value = None):
+        super().__init__(parent)
+        self.value = None
+    
+        @QtCore.pyqtSlot(type(self.value))
+        def on_value_changed(value):
+            self.value = value
+            print("value: ", value)
+        self.on_value_changed = on_value_changed

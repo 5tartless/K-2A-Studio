@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box;}
+        body { overflow: hidden; background: #1e1e1e;}
+        #editor { width: 100vw; height: 100vw;}
+    </style>
+</head>
+<body>
+    <div id="editor">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
+        <script>
+            require.config({
+                paths: {vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs'}
+            })
+
+            require(['vs/editor/editor.main'], function() {
+                window.editor = monaco.editor.create(document.getElementById('editor'), {
+                    value: '',
+                    language: 'python',
+                    theme: 'vs-dark',
+                    fontSize: 14,
+                    automaticLayout: true
+                })
+                window.editor.onDidChangeModelContent(function() {
+                    document.title = window.editor.getValue();
+                })
+            })
+        </script>
+    </div>
+</body>
+</html>

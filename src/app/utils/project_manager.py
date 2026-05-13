@@ -2,6 +2,9 @@ import requests, os, platform, json, shutil, subprocess, zipfile, io
 from pathlib import Path
 from app.utils.exit_code import EXIT_CODES
 
+os.environ["QTWEBENGINE_CHROMIUM_FLAGS"] = "--disable-gpu"
+os.environ["QT_QPA_PLATFORM"] = "xcb"
+
 APP_DEFAULT_SETTINGS = {
     "projects": [
         #{}, {}

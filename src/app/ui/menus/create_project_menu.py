@@ -1,5 +1,5 @@
 from app.utils import CustomPyQt as qt
-from app.utils.project_creator import path_exists, create_project, get_parent_recursive, is_project, PROJECT_DEFAULT_SETTINGS
+from app.utils.project_manager import path_exists, create_project, get_parent_recursive, is_project, PROJECT_DEFAULT_SETTINGS
 from app.ui.menus._basic_menu import K2A_Menu
 
 class CreateProjectMenu(K2A_Menu):

@@ -1,4 +1,4 @@
-from app.utils import CustomPyQt as qt, project_creator as pt
+from app.utils import CustomPyQt as qt, project_manager as pt
 from app.ui.menus._basic_menu import K2A_Menu
 
 class ProjectListMenu(K2A_Menu):
@@ -57,6 +57,7 @@ class Project(qt.CFrame):
         if self.project_data:
             self.get_widget("/project-brief-data").setName(self.project_data["name"])
             self.get_widget("/project-brief-data").setPath(self.project_data["path"])
+            self.get_widget("/project-brief-data").setOnGithub("GitHub" if self.project_data["github-url"] else "Local")
             # self.get_widget("project-edit").setVersion()
 
     def init_project(self):
@@ -70,23 +71,28 @@ class Project(qt.CFrame):
 class ProjectBriefData(qt.CFrame):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, layout=qt.Qw.QVBoxLayout, **kwargs)
-        self.edit_widget(self.create_widget(qt.Qw.QLabel, "/name"), setText="Unknown")
-        self.edit_widget(self.create_widget(qt.Qw.QLabel, "/path"), setText="Unknown")
+        self.edit_widget(self.create_widget(qt.Qw.QLabel, "/name"), setText="Unknown", setObjectName="main")
+        self.edit_widget(self.create_widget(qt.Qw.QLabel, "/path"), setText="Unknown", setObjectName="main")
+        self.edit_widget(self.create_widget(qt.Qw.QLabel, "/on-github"), setText="", setObjectName="main")
 
-        self.addToLayout(("/name", "/path"))
+        self.get_widget(self.lname, "layouts").setSpacing(0)
+        self.addToLayout(("/name", "/path", "/on-github"))
     
     def setName(self, txt):
         self.get_widget("/name").setText(txt)
     def setPath(self, txt):
         self.get_widget("/path").setText(txt)
+    def setOnGithub(self, txt):
+        self.get_widget("/on-github").setText(txt)
 
 class ProjectEdit(qt.CFrame):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, layout=qt.Qw.QVBoxLayout, **kwargs)
-        self.edit_widget(self.create_widget(qt.Qw.QLabel, "/version"), setText="Version: Unknown")
-        self.edit_widget(self.create_widget(qt.Qw.QPushButton, "/edit"), setText="Edit")
+        self.edit_widget(self.create_widget(qt.Qw.QLabel, "/version"), setText="Version: Unknown", setObjectName="main")
+        self.edit_widget(self.create_widget(qt.Qw.QPushButton, "/edit"), setText="Edit", setObjectName="main")
 
         self.connect_signal((self.get_widget("/edit"),), {"clicked": self.clickedEdit})
+        self.get_widget(self.lname, "layouts").setSpacing(0)
         self.addToLayout(("/version", "/edit"))
 
     def setVersion(self, txt: str):

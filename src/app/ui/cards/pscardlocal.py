@@ -1,4 +1,4 @@
-from app.utils import CustomPyQt as qt, project_creator as pt
+from app.utils import CustomPyQt as qt, project_manager as pt
 
 class PSCardLocal(qt.CFrame):
     def __init__(self, *args, **kwargs):
