@@ -29,14 +29,15 @@ class CCore():
             if not store_in: self.layouts[name] = newLayout
             else: store_side = getattr(self, store_in); store_side[name] = newLayout
         return newLayout
-    def addToLayout(self, layout: Qw.QLayout, items: str | tuple[str]):
+    def addToLayout(self, layout: Qw.QLayout, items: str | tuple[str], from_where: str = None):
+        store_in = getattr(self, from_where) if from_where else self.widgets
         if type(items) == tuple:
             for item in items:
-                if type(item) == tuple: self.edit_widget(layout, addWidget=(self.widgets[item[0]], *item[1:]))
+                if type(item) == tuple: self.edit_widget(layout, addWidget=(store_in[item[0]], *item[1:]))
                 else:
-                    if item[:2] != "-s": self.edit_widget(layout, addWidget=self.widgets[item])
+                    if item[:2] != "-s": self.edit_widget(layout, addWidget=store_in[item])
                     else: self.edit_widget(layout, addStretch=int(item[2:]))
-        else: self.edit_widget(layout, addWidget=self.widgets[items])
+        else: self.edit_widget(layout, addWidget=store_in[items])
     def find(self, obj_in: any, what: any) -> int:
         finder = 0
         for i in obj_in:
@@ -117,6 +118,11 @@ class CCore():
     def getAbsolutePath(self, relative: str) -> str:
         base = getattr(sys, "_MEIPASS", os.path.abspath("."))
         return os.path.join(base, relative)
+    
+    def reloadStyleSheet(self):
+        self.style().unpolish(self)
+        self.style().polish(self)
+        self.update()
 
 class CMainWindow(CCore, Qw.QMainWindow):
     def __init__(self, window: Qw.QApplication = None, winName: str = "KaModel", winSize: tuple = (800,600), cssRelativePath: str = "", debug: bool = False, parent = None):
@@ -287,8 +293,8 @@ class CFrame(CCore, Qw.QFrame):
             self.get_widget(widget).setStyleSheet(ss)
             if isinstance(widget, CFrame): widget.setAllStyleSheet(ss)
     
-    def addToLayout(self, items):
-        return super().addToLayout(self.get_widget(self.lname, "layouts"), items)
+    def addToLayout(self, items, to: object = None, from_where: str = None):
+        return super().addToLayout(to or self.get_widget(self.lname, "layouts"), items, from_where)
         
 class PollCLineEdit(CFrame):
     def __init__(self, *args, **kwargs):
