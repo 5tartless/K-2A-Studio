@@ -24,7 +24,7 @@ class K2A_App(qt.CMainWindow):
         
 if __name__ == "__main__":
     pt.setup()
-
+    print("uwu")
     # ui init
     window = qt.Qw.QApplication(sys.argv)
     app = K2A_App(window, winSize=(1080,720), cssRelativePath="src/css/style.css", debug=True)
