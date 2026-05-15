@@ -70,7 +70,7 @@ def get_cache_dir() -> str:
 def get_app_config_folder() -> str:
     current_os = platform.system()
     config_directory = ""
-    if current_os == "windows":
+    if current_os == "Windows":
         config_directory = Path(os.environ.get('APPDATA'), Path.home() / 'AppData/Roaming')
     elif current_os == "Darwin":
         config_directory = Path.home() / 'Library/Application/Support'
