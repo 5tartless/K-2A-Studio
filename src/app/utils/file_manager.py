@@ -11,5 +11,5 @@ def write(path: str, content: any):
     with open(path, "w") as file:
         json.dump(content, file)
 
-def path_exist(path) -> bool:
-    return os.path.exists(path)
+def path_exist(path) -> bool: 
+    return os.path.exists(path) if path else False
