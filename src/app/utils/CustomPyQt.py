@@ -43,6 +43,8 @@ class CCore():
         for i in obj_in:
             if i == what: return finder
             finder += 1
+    def update_style_sheet(self) -> None:
+        self.setStyleSheet(Qw.QApplication.instance().styleSheet())
     def edit_widget(self, widget, **kwargs): #edits a label by passing methods and arguments like this: setText="MyText"
         widgetOptions = [getattr(widget, func) for func in kwargs if hasattr(widget, func)]
         args = {} #label.setText : [kwargs["setText"]] if "setText" in kwargs else []... like this but in a lot of lines of code
@@ -276,9 +278,10 @@ class CTable(Qw.QTableWidget):
 class CFrame(CCore, Qw.QFrame):
     #could act as a card or just a frame that contains more widgets
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, parent, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        
+        self.setParent(parent)
+
         self.ltype = kwargs.get("layout", None)
         self.lname = kwargs.get("name", None)
         object_name = kwargs.get("object_name", None)
@@ -288,6 +291,10 @@ class CFrame(CCore, Qw.QFrame):
 
         self.setLayout(self.get_widget(self.lname, "layouts"))
     
+    def showEvent(self, a0):
+        super().showEvent(a0)
+        self.setStyleSheet(Qw.QApplication.instance().styleSheet())
+
     def setAllStyleSheet(self, ss):
         for widget in self.widgets:
             self.get_widget(widget).setStyleSheet(ss)
