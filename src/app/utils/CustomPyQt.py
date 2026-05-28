@@ -154,7 +154,6 @@ class CMenu(CCore, Qw.QWidget):
     def hideEvent(self, a0):
         return super().hideEvent(a0)
     
-    
     def appear(self, **kwargs): self.show()
     def setAllStyleSheet(self, ss):
         for widget in self.widgets:
@@ -162,6 +161,62 @@ class CMenu(CCore, Qw.QWidget):
             if isinstance(widget, CFrame): widget.setAllStyleSheet(ss)
     def getMainWindow(self) -> CMainWindow:
         return self.parent().parent()
+
+class CContextMenu(Qw.QMenu):
+    def __init__(self, title: str, parent = None):
+        super().__init__(title, parent)
+        self.action_list: dict = {}
+
+class CMenuBar(Qw.QMenuBar):
+    class FileMenu(CContextMenu):
+        def __init__(self, title: str = "File", parent = ...):
+            super().__init__(title, parent)
+            self.action_list["new_file"] = self.addAction("New File")
+            self.action_list["open_file"] = self.addAction("Open File")
+            self.addSeparator()
+            self.action_list["save"] = self.addAction("Save")
+            self.action_list["save_as"] = self.addAction("Save As")
+            self.addSeparator()
+            self.action_list["exit"] = self.addAction("Save and Exit")
+
+    class EditMenu(CContextMenu):
+        def __init__(self, title: str = "Edit", parent = ...):
+            super().__init__(title, parent)
+
+            self.action_list["preferences"] = self.addAction("Preferences")
+            self.action_list["auto_save"] = self.addAction("Enable Auto Save")
+            self.addSeparator()
+            self.action_list["undo"] = self.addAction("Undo")
+            self.action_list["redo"] = self.addAction("Redo")
+            self.addSeparator()
+            self.action_list["cut"] = self.addAction("Cut")
+            self.action_list["copy"] = self.addAction("Copy")
+            self.action_list["paste"] = self.addAction("Paste")
+
+    class ViewMenu(CContextMenu):
+        def __init__(self, title: str = "View", parent = ...):
+            super().__init__(title, parent)
+            self.action_list["editor_appearance"] = self.addAction("Editor Appearance")
+            self.action_list["chat"] = self.addAction("Show Chat")
+            self.action_list["menu_bar"] = self.addAction("Show Menu Bar")
+            self.addSeparator()
+            self.action_list["file_explorer"] = self.addAction("Show File Explorer")
+            self.action_list["swap_chat_and_file_explorer"] = self.addAction("Swap With Chat")
+            self.addSeparator()
+            self.action_list["tab_bar"] = self.addAction("Show Tab Bar")
+
+    def __init__(self, parent = None):
+        super().__init__(parent)
+        self.file_menu = self.addMenu(self.FileMenu(parent=self))
+        self.edit_menu = self.addMenu(self.EditMenu(parent=self))
+        self.view_menu = self.addMenu(self.ViewMenu(parent=self))
+
+    def fm_action_list(self) -> dict:
+        return self.file_menu.menu().action_list
+    def em_action_list(self) -> dict:
+        return self.edit_menu.menu().action_list
+    def vm_action_list(self) -> dict:
+        return self.view_menu.menu().action_list
 
 class Worker(QtCore.QThread):
     workerFinished = QtCore.pyqtSignal(object)
@@ -242,7 +297,7 @@ class SetVar():
     def value(self, new_value):
         if new_value != self._value:
             self._value = new_value
-            self._callback(self.value)
+            self._callback(new_value)
 
 class CTextEdit(Qw.QTextEdit):
     def __init__(self, parent = None, enterConnection: callable = None, triggeredOnTextChanged: list[callable] = None):
@@ -293,7 +348,7 @@ class CFrame(CCore, Qw.QFrame):
     
     def showEvent(self, a0):
         super().showEvent(a0)
-        self.setStyleSheet(Qw.QApplication.instance().styleSheet())
+        self.update_style_sheet()
 
     def setAllStyleSheet(self, ss):
         for widget in self.widgets:

@@ -3,13 +3,14 @@ class CodeManager():
         self.codes = {
 
         }
+        self.auto_save: bool = False
         #{name: "your code.."}
 
         self.on_code_changed_callbacks: list = []
     def on_code_changed(self):
         for callback in self.on_code_changed_callbacks:
             callback()
-        print("Code: ", self.codes) #debug
+        # print("Code: ", self.codes) #debug
 
     def code_exists(self, name: str) -> bool:
         return name in self.codes

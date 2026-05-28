@@ -1,9 +1,9 @@
-import requests, os, platform, json, shutil, subprocess, zipfile, io
-from pathlib import Path
+import requests, platform, shutil, subprocess, zipfile, io
 from app.utils.exit_code import EXIT_CODES
+from app.utils import file_manager as fm
 
-os.environ["QTWEBENGINE_CHROMIUM_FLAGS"] = "--disable-gpu"
-os.environ["QT_QPA_PLATFORM"] = "xcb"
+fm.os.environ["QTWEBENGINE_CHROMIUM_FLAGS"] = "--disable-gpu"
+fm.os.environ["QT_QPA_PLATFORM"] = "xcb"
 
 APP_DEFAULT_SETTINGS = {
     "projects": [
@@ -26,28 +26,27 @@ app_cache_folder = None
 def setup():
     global app_cache_folder
     read_app_config()
-    app_cache_folder = os.path.join(get_cache_dir(), "k2a")
-    if not path_exists(app_cache_folder):
-        os.mkdir(app_cache_folder)
+    app_cache_folder = fm.os.path.join(get_cache_dir(), "k2a")
+    if not fm.path_exists(app_cache_folder):
+        fm.os.mkdir(app_cache_folder)
 
 def read_app_config() -> object:
     global app_config_folder, app_config_file
     if not app_config_folder: app_config_folder = get_app_config_folder()
-    if not app_config_file:   app_config_file = os.path.join(app_config_folder, "config.json")
+    if not app_config_file:   app_config_file = fm.os.path.join(app_config_folder, "config.json")
 
-    if path_exists(app_config_folder):
+    if fm.path_exists(app_config_folder):
         try:
-            with open(app_config_file, "r") as file:
-                return json.load(file)
-        except json.decoder.JSONDecodeError:
+            return fm.read(app_config_file, True)
+        except fm.json.decoder.JSONDecodeError:
             print("WARNING: File was corrupt, recreating app config.")
     else: #app settings is non existent
-        os.mkdir(app_config_folder)
+        fm.os.mkdir(app_config_folder)
+
     write_app_config(APP_DEFAULT_SETTINGS)
     return read_app_config()
 def write_app_config(new):
-    with open(app_config_file, "w") as file:
-        json.dump(new, file, indent=4)
+    fm.write(app_config_file, new, indent=4)
 def list_projects() -> list[dict]:
     app_config = read_app_config()
     return app_config["projects"]
@@ -55,36 +54,26 @@ def list_projects() -> list[dict]:
 def generate_project_id() -> int:
     app_config = read_app_config()
     return app_config["rpid"] + 1
-
-
 def get_cache_dir() -> str:
     current_os = platform.system()
 
     if current_os == "Windows":
-        return Path(os.environ.get('LOCALAPPDATA', Path.home() /  'AppData/Local'))
+        return fm.Path(fm.os.environ.get('LOCALAPPDATA', fm.Path.home() /  'AppData/Local'))
     elif current_os == "Darwin":  # macOS
-        return Path.home() / 'Library/Caches'
+        return fm.Path.home() / 'Library/Caches'
     else:  # Linux and others
-        return Path(os.environ.get('XDG_CACHE_HOME', Path.home() / '.cache'))
+        return fm.Path(fm.os.environ.get('XDG_CACHE_HOME', fm.Path.home() / '.cache'))
 
 def get_app_config_folder() -> str:
     current_os = platform.system()
     config_directory = ""
     if current_os == "Windows":
-        config_directory = Path(os.environ.get('APPDATA'), Path.home() / 'AppData/Roaming')
+        config_directory = fm.Path(fm.os.environ.get('APPDATA'), fm.Path.home() / 'AppData/Roaming')
     elif current_os == "Darwin":
-        config_directory = Path.home() / 'Library/Application/Support'
+        config_directory = fm.Path.home() / 'Library/Application/Support'
     else:
-        config_directory = Path(os.environ.get('XDG_CONFIG_HOME', Path.home() / '.config'))
-    return os.path.join(config_directory, "k2a")
-
-def git_clone_repository(url: str):
-    default_git_clone_cache_dir = get_cache_dir()
-    if repo_exists(url):
-        pass
-    else:
-        return EXIT_CODES["30"]
-    return EXIT_CODES["0"]
+        config_directory = fm.Path(fm.os.environ.get('XDG_CONFIG_HOME', fm.Path.home() / '.config'))
+    return fm.os.path.join(config_directory, "k2a")
 
 def repo_exists(url: str) -> bool:
     if "github.com" in url:
@@ -94,7 +83,7 @@ def repo_exists(url: str) -> bool:
     return False
 
 def repo_exists_git(url: str) -> bool: #git ls-remote
-    env = os.environ.copy()
+    env = fm.os.environ.copy()
     env["GIT_TERMINAL_PROMPT"] = "0"
     try:
         result = subprocess.run(
@@ -139,7 +128,7 @@ def download_repo(url: str, destination: str):
             with zipfile.ZipFile(io.BytesIO(response.content)) as z:
                 z.extractall(destination)
             
-            result["path"] = os.path.join(destination, url.split("/")[-1]+zip_endswith)
+            result["path"] = fm.os.path.join(destination, url.split("/")[-1]+zip_endswith)
             result["message"] = "Repo successfully cloned."
             print(f"Extracted at {result['path']}")
     
@@ -154,9 +143,6 @@ def get_parent_recursive(obj: object, recursions: int) -> object:
         if i == recursions:
             break
     return obj
-
-def path_exists(path: str) -> bool:
-    return os.path.exists(path)
 
 def create_project(data: dict):
     file_content = read_app_config()
@@ -173,7 +159,7 @@ def is_project(path: str) -> bool:
     return False
 
 def import_local_project(path) -> str | None:
-    if path_exists(path):
+    if fm.path_exists(path):
         if is_project(path): #1 case: project is already registered.
             return "Project is already registered."
         else:                #2 case: project is not registered on config.json

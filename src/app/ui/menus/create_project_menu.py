@@ -1,13 +1,13 @@
 from app.utils import CustomPyQt as qt
-from app.utils.project_manager import path_exists, create_project, get_parent_recursive, is_project, PROJECT_DEFAULT_SETTINGS
+from app.utils.project_manager import create_project, get_parent_recursive, is_project, PROJECT_DEFAULT_SETTINGS
+from app.utils.file_manager import path_exists
 from app.ui.menus._basic_menu import K2A_Menu
-
 class CreateProjectMenu(K2A_Menu):
     def __init__(self, parent, **kwargs):
         super().__init__(parent, **kwargs)
-        # self.setAllStyleSheet(self.cssStyle)
+        self.setAllStyleSheet(self.cssStyle)
+        
         self.edit_widget(self.create_widget(CreateBox, "/center/create-box", args={"layout": qt.Qw.QVBoxLayout, "name": "/center/create-box", "object_name": "main-top"}))
-
         self.addToLayout(self.get_widget("/center", "layouts"), "/center/create-box")
 
     def appear(self, **kwargs):

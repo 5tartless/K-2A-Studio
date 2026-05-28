@@ -3,6 +3,10 @@
     padding: 0;
     margin: 0;
 }
+#textorandom{
+    color: red;
+    background-color: aqua;
+}
 
 #scroll-bar{
     background-color: white;

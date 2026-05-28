@@ -21,22 +21,42 @@ class ProjectEditorMenu(qt.CMenu):
         self.setLayout(self.create_layout(qt.Qw.QVBoxLayout, "/"))
         self.edit_widget(self.get_widget("/", "layouts"), setContentsMargins=(0, 0, 0, 0), setSpacing=0)
 
-        self.edit_widget(self.create_widget(qt.Qw.QWidget, "/top"), setObjectName="main", setMaximumHeight=32, setLayout=self.create_layout(qt.Qw.QVBoxLayout, "/top"))
+        self.edit_widget(self.create_widget(qt.Qw.QWidget, "/top"), setObjectName="main", setMaximumHeight=48, setLayout=self.create_layout(qt.Qw.QVBoxLayout, "/top"))
         self.edit_widget(self.create_widget(qt.Qw.QWidget, "/center"), setObjectName="main", setMinimumHeight=64, setLayout=self.create_layout(qt.Qw.QVBoxLayout, "/center"))
         self.edit_widget(self.get_widget("/top", "layouts"), setContentsMargins=(0, 0, 0, 0), setSpacing=0)
         self.edit_widget(self.get_widget("/center", "layouts"), setContentsMargins=(0, 0, 0, 0), setSpacing=0)
         #classes:
             #editor (monaco)
-        self.edit_widget(self.create_widget(Editor, "/editor", args={"name": "/editor", "object_name": "none"}))
+        self.edit_widget(self.create_widget(Editor, "/editor", args={"name": "/editor", "object_name": "none"}), setSizePolicy=(qt.Qw.QSizePolicy.Minimum,qt.Qw.QSizePolicy.Minimum))
         self.get_widget("/editor").on_browser_load_callbacks.append(self.load_tab_bar)
 
+        self.edit_widget(self.create_widget(qt.CMenuBar, "/top/menu-bar"))
+        self.addToLayout(self.get_widget("/top", "layouts"), "/top/menu-bar")
         self.addToLayout(self.get_widget("/center", "layouts"), ("/editor",))
         self.addToLayout(self.get_widget("/", "layouts"), ("/top", "/center"))
         
         self.setAllStyleSheet(self.cssStyle)
+    
     def load_tab_bar(self):
         self.edit_widget(self.create_widget(TabManager.TabBar, "/tab-manager", args={"reciever": self.get_widget("/editor"), "name": "/tab/tab-manager", "object_name": "main"}))
         self.addToLayout(self.get_widget("/top", "layouts"), ("/tab-manager",))
+        self.config_menu_bar()
+
+    def config_menu_bar(self):
+        menu_bar: qt.CMenuBar = self.get_widget("/top/menu-bar")
+        editor: Editor = self.get_widget("/editor")
+        tab_bar: TabManager.TabBar = self.get_widget("/tab-manager")
+        fm_action_list = menu_bar.fm_action_list()
+        em_action_list = menu_bar.em_action_list()
+        vm_action_list = menu_bar.vm_action_list()
+
+        tab_manager = tab_bar.get_tab_manager()
+        fm_action_list["new_file"].triggered.connect(tab_manager.add_tab)
+        fm_action_list["open_file"].triggered.connect(tab_manager.add_tab_from_path)
+        fm_action_list["save"].triggered.connect(lambda: tab_manager.save_tab(tab_manager.get_current_tab()))
+        fm_action_list["save_as"].triggered.connect(lambda: tab_manager.save_tab(tab_manager.get_current_tab(), True))
+        fm_action_list["exit"].triggered.connect(pt.get_parent_recursive(self, 2).close)
+
 
 class Editor(qt.CFrame):
     def __init__(self, *args, **kwargs):
@@ -59,22 +79,15 @@ class Editor(qt.CFrame):
         self.connect_signal((self.get_widget("/browser"),), {"loadFinished": self.on_browser_load_finished})
         self.addToLayout("/browser")
 
-    # def await_monaco(self): #USELESS for now i don't know if it will ever be useful i just like that code.
-    #     def set_result(ready: bool):
-    #         if ready:
-    #             for callback in self.await_monaco_callbacks:
-    #                 callback()
-    #         else: qt.QtCore.QTimer.singleShot(50, check_monaco_ready)
-    #     def check_monaco_ready():
-    #         self.get_widget("/browser").page().runJavaScript(
-    #             "typeof window.editor !== 'undefined'",
-    #             set_result
-    #         )
-    #     check_monaco_ready()
-
     def store_code_memory(self, code: str):
         if self.tab_manager.current_tid >= 0:
-            code_manager.update_code(self.tab_manager.get_tab_name(self.tab_manager.current_tid), code)
+            current_tab = self.tab_manager.get_tab(self.tab_manager.current_tid)
+            if code_manager.code_exists(current_tab.name): 
+                if fm.path_exists(current_tab.path) and self.current_code.value == fm.read(current_tab.path):
+                    current_tab.saved = True
+                elif code_manager.get_code(current_tab.name) != code:
+                    current_tab.saved = False
+            code_manager.update_code(current_tab.name, code)
 
     def on_browser_load_finished(self):
         self.loaded = True
@@ -98,7 +111,7 @@ class Editor(qt.CFrame):
     
     def set_code(self, code: str) -> None:
         self._setting_code = True
-        escaped = pt.json.dumps(code)
+        escaped = fm.json.dumps(code)
         self.get_widget("/browser").page().runJavaScript(
             f"window.editor.setValue({escaped});",
             lambda _: setattr(self, "_setting_code", False)
@@ -108,7 +121,4 @@ class FileExplorer():
     pass
 
 class AIAssistant():
-    pass
-
-class HiddenConfBar():
     pass
