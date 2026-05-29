@@ -166,57 +166,69 @@ class CContextMenu(Qw.QMenu):
     def __init__(self, title: str, parent = None):
         super().__init__(title, parent)
         self.action_list: dict = {}
+    
+    def add_action(self, key: str, name: str) -> Qw.QAction:
+        action = self.addAction(name)
+        self.action_list[key] = action
+        return action
+    
+    def add_defaults(self, start_with_sep: bool = True):
+        if start_with_sep: self.addSeparator()
 
 class CMenuBar(Qw.QMenuBar):
     class FileMenu(CContextMenu):
         def __init__(self, title: str = "File", parent = ...):
             super().__init__(title, parent)
-            self.action_list["new_file"] = self.addAction("New File")
-            self.action_list["open_file"] = self.addAction("Open File")
+        def add_defaults(self, start_with_sep = True):
+            super().add_defaults(start_with_sep)
+            self.add_action("new_file", "New file")
+            self.add_action("open_file", "Open File")
             self.addSeparator()
-            self.action_list["save"] = self.addAction("Save")
-            self.action_list["save_as"] = self.addAction("Save As")
+            self.add_action("save", "Save")
+            self.add_action("save_as", "Save As")
             self.addSeparator()
-            self.action_list["exit"] = self.addAction("Save and Exit")
+            self.add_action("exit", "Save and Exit")
 
     class EditMenu(CContextMenu):
         def __init__(self, title: str = "Edit", parent = ...):
             super().__init__(title, parent)
 
-            self.action_list["preferences"] = self.addAction("Preferences")
-            self.action_list["auto_save"] = self.addAction("Enable Auto Save")
+        def add_defaults(self, start_with_sep = True):
+            super().add_defaults(start_with_sep)
+            #self.add_action("preferences", "Preferences")
+            #self.add_action("auto_save", "Enable Auto Save")
+
+            self.add_action("undo", "Undo")
+            self.add_action("redo", "Redo")
             self.addSeparator()
-            self.action_list["undo"] = self.addAction("Undo")
-            self.action_list["redo"] = self.addAction("Redo")
-            self.addSeparator()
-            self.action_list["cut"] = self.addAction("Cut")
-            self.action_list["copy"] = self.addAction("Copy")
-            self.action_list["paste"] = self.addAction("Paste")
+            self.add_action("cut", "Cut")
+            self.add_action("copy", "Copy")
+            self.add_action("paste", "Paste")
 
     class ViewMenu(CContextMenu):
         def __init__(self, title: str = "View", parent = ...):
             super().__init__(title, parent)
-            self.action_list["editor_appearance"] = self.addAction("Editor Appearance")
-            self.action_list["chat"] = self.addAction("Show Chat")
-            self.action_list["menu_bar"] = self.addAction("Show Menu Bar")
+            self.add_action("editor_appearance", "Editor Appearance")
+            self.add_action("chat", "Show Chat")
+            self.add_action("menu_bar", "Show Menu Bar")
             self.addSeparator()
-            self.action_list["file_explorer"] = self.addAction("Show File Explorer")
-            self.action_list["swap_chat_and_file_explorer"] = self.addAction("Swap With Chat")
+            self.add_action("file_explorer", "Show File Explorer")
+            self.add_action("swap_chat_and_file_explorer", "Swap With Chat")
             self.addSeparator()
-            self.action_list["tab_bar"] = self.addAction("Show Tab Bar")
+            self.add_action("tab_bar", "Show Tab Bar")
 
     def __init__(self, parent = None):
         super().__init__(parent)
-        self.file_menu = self.addMenu(self.FileMenu(parent=self))
-        self.edit_menu = self.addMenu(self.EditMenu(parent=self))
-        self.view_menu = self.addMenu(self.ViewMenu(parent=self))
-
-    def fm_action_list(self) -> dict:
-        return self.file_menu.menu().action_list
-    def em_action_list(self) -> dict:
-        return self.edit_menu.menu().action_list
-    def vm_action_list(self) -> dict:
-        return self.view_menu.menu().action_list
+        self.menus: dict = {
+            "file": self.addMenu(self.FileMenu(parent=self)).menu(),
+            "edit": self.addMenu(self.EditMenu(parent=self)).menu()
+            # "view": self.addMenu(self.ViewMenu(parent=self)).menu()
+        }
+    def add_menu(self, name: str, Menu: CContextMenu, **menu_kwargs):
+        if not name in self.menus:
+            self.menus[name] = self.addMenu(Menu(parent=self, **menu_kwargs)).menu()
+    def set_menu_action_callback(self, name: str, action: str, callback):
+        self.menus[name].action_list[action].triggered.connect(callback)
 
 class Worker(QtCore.QThread):
     workerFinished = QtCore.pyqtSignal(object)
@@ -390,3 +402,10 @@ class CBridge(QtCore.QObject):
             self.value = value
             print("value: ", value)
         self.on_value_changed = on_value_changed
+
+#functions
+def create_timer(parent=None, time_out_callback=None, interval=500) -> QtCore.QTimer:
+    timer = QtCore.QTimer(parent)
+    timer.setInterval(interval)
+    if callable(time_out_callback): timer.timeout.connect(time_out_callback)
+    return timer

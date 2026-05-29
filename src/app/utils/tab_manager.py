@@ -94,9 +94,9 @@ class TabManager(qt.CFrame):
             "Open File",
             filter="All Files (*)"
         )
-
-        file_name = path.split("/")[-1:][0]
-        self.add_tab(file_name, path)
+        if path:
+            file_name = path.split("/")[-1:][0]
+            self.add_tab(file_name, path)
 
     def add_tab(self, title: str = None, path: str = None):
         self.max_tid += 1

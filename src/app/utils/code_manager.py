@@ -1,12 +1,20 @@
+from app.utils.CustomPyQt import SetVar, create_timer
 class CodeManager():
     def __init__(self):
         self.codes = {
 
         }
         self.auto_save: bool = False
-        #{name: "your code.."}
+        self._auto_save_timer = create_timer(interval=250)
 
         self.on_code_changed_callbacks: list = []
+    
+    def toggle_auto_save(self):
+        new_value = not self.auto_save
+        self._auto_save_timer.start() if new_value else self._auto_save_timer.stop()
+        self.auto_save = new_value
+        print(f"INFO: auto-save state: {self.auto_save}")
+
     def on_code_changed(self):
         for callback in self.on_code_changed_callbacks:
             callback()

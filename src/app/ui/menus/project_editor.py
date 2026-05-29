@@ -4,6 +4,7 @@ from app.utils.code_manager import code_manager
 class ProjectEditorMenu(qt.CMenu):
     def __init__(self, parent, **kwargs):
         super().__init__(parent, **kwargs)
+        code_manager._auto_save_timer.timeout.connect(self.save_tab)
 
     def appear(self, **kwargs):
         self.load(kwargs)
@@ -42,21 +43,43 @@ class ProjectEditorMenu(qt.CMenu):
         self.addToLayout(self.get_widget("/top", "layouts"), ("/tab-manager",))
         self.config_menu_bar()
 
+    def save_tab(self, save_as: bool = False) -> None:
+        tab_manager: TabManager.TabManager = self.get_widget("/tab-manager").get_tab_manager()
+        tab_manager.save_tab(tab_manager.get_current_tab(), save_as)
+
     def config_menu_bar(self):
         menu_bar: qt.CMenuBar = self.get_widget("/top/menu-bar")
-        editor: Editor = self.get_widget("/editor")
         tab_bar: TabManager.TabBar = self.get_widget("/tab-manager")
-        fm_action_list = menu_bar.fm_action_list()
-        em_action_list = menu_bar.em_action_list()
-        vm_action_list = menu_bar.vm_action_list()
+        editor: Editor = self.get_widget("/editor")
 
         tab_manager = tab_bar.get_tab_manager()
-        fm_action_list["new_file"].triggered.connect(tab_manager.add_tab)
-        fm_action_list["open_file"].triggered.connect(tab_manager.add_tab_from_path)
-        fm_action_list["save"].triggered.connect(lambda: tab_manager.save_tab(tab_manager.get_current_tab()))
-        fm_action_list["save_as"].triggered.connect(lambda: tab_manager.save_tab(tab_manager.get_current_tab(), True))
-        fm_action_list["exit"].triggered.connect(pt.get_parent_recursive(self, 2).close)
 
+        menu_bar.menus["file"].add_defaults()
+        menu_bar.set_menu_action_callback("file", "new_file", tab_manager.add_tab)
+        menu_bar.set_menu_action_callback("file", "open_file", tab_manager.add_tab_from_path)
+        menu_bar.set_menu_action_callback("file", "save", self.save_tab)
+        menu_bar.set_menu_action_callback("file", "save_as", lambda: self.save_tab(True))
+        menu_bar.set_menu_action_callback("file", "exit", pt.get_parent_recursive(self, 2).close)
+
+        menu_bar.menus["edit"].add_action("preferences", "Preferences")
+        menu_bar.menus["edit"].add_action("auto_save", "Enable Auto Save")
+        menu_bar.set_menu_action_callback("edit", "auto_save", code_manager.toggle_auto_save)
+        menu_bar.menus["edit"].add_defaults()
+        menu_bar.set_menu_action_callback("edit", "undo", self.get_widget("/editor").history_do)
+        menu_bar.set_menu_action_callback("edit", "redo", lambda: self.get_widget("/editor").history_do(True))
+        menu_bar.set_menu_action_callback("edit", "cut", lambda: self.get_widget("/editor").clipboard_do("cut"))
+        menu_bar.set_menu_action_callback("edit", "copy", lambda: self.get_widget("/editor").clipboard_do("copy"))
+        menu_bar.set_menu_action_callback("edit", "paste", lambda: self.get_widget("/editor").clipboard_do("paste"))
+
+        menu_bar.add_menu("view", qt.CContextMenu, title="View")
+        menu_bar.menus["view"].add_action("editor_appearance", "Editor Appearance")
+        menu_bar.menus["view"].add_action("chat", "Show Chat")
+        menu_bar.menus["view"].add_action("menu_bar", "Show Menu Bar")
+        menu_bar.menus["view"].addSeparator()
+        menu_bar.menus["view"].add_action("file_explorer", "Show File Explorer")
+        menu_bar.menus["view"].add_action("swap_chat_and_file_explorer", "Swap With Chat")
+        menu_bar.menus["view"].addSeparator()
+        menu_bar.menus["view"].add_action("tab_bar", "Show Tab Bar")
 
 class Editor(qt.CFrame):
     def __init__(self, *args, **kwargs):
@@ -68,14 +91,14 @@ class Editor(qt.CFrame):
         self.on_browser_load_callbacks: list = []
         self.tab_manager: TabManager.TabManager
 
-        self._save_timer = qt.QtCore.QTimer(self)
-        self._save_timer.setInterval(150)
-        self._save_timer.timeout.connect(self.get_code_sync)
+        self._code_update_timer = qt.create_timer(parent=self, time_out_callback=self.get_code_sync, interval=150)
 
         self.get_widget(self.lname, "layouts").setContentsMargins(0, 0, 0, 0)
         self.edit_widget(self.create_widget(qt.QtWebEngineWidgets.QWebEngineView, "/browser"),
             setHtml=(self.open_editor_html(), qt.QtCore.QUrl("http://localhost")),
         )
+        for setting in [qt.QtWebEngineWidgets.QWebEngineSettings.JavascriptCanAccessClipboard, qt.QtWebEngineWidgets.QWebEngineSettings.JavascriptCanPaste]:
+            self.get_widget("/browser").settings().setAttribute(setting, True)
         self.connect_signal((self.get_widget("/browser"),), {"loadFinished": self.on_browser_load_finished})
         self.addToLayout("/browser")
 
@@ -89,11 +112,23 @@ class Editor(qt.CFrame):
                     current_tab.saved = False
             code_manager.update_code(current_tab.name, code)
 
+    def history_do(self, redo: bool = False):
+        self.get_widget("/browser").page().runJavaScript(
+            f"window.editor.trigger('keyboard', '{'undo' if not redo else 'redo'}', null);"
+        )
+    def clipboard_do(self, action: str): #action = 'cut', 'copy', 'paste'
+        self.get_widget("/browser").page().runJavaScript(
+            f"window.editor.trigger('keyboard', 'editor.action.clipboard{action.capitalize()}Action', null);"
+        )
+
+    def open_editor_html(self) -> str:
+        return fm.read(fm.os.path.abspath("src/app/web/editor.html"))
+    
     def on_browser_load_finished(self):
         self.loaded = True
         for callback in self.on_browser_load_callbacks:
             callback()
-        self._save_timer.start()
+        self._code_update_timer.start()
 
     def get_code_sync(self) -> None:
         if self.loaded and not self._setting_code:
@@ -106,9 +141,6 @@ class Editor(qt.CFrame):
             self.get_widget("/browser").page().runJavaScript("window.editor.getValue();", callback)
             loop.exec_()
 
-    def open_editor_html(self) -> str:
-        return fm.read(fm.os.path.abspath("src/app/web/editor.html"))
-    
     def set_code(self, code: str) -> None:
         self._setting_code = True
         escaped = fm.json.dumps(code)

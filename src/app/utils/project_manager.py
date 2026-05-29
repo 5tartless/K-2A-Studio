@@ -2,8 +2,8 @@ import requests, platform, shutil, subprocess, zipfile, io
 from app.utils.exit_code import EXIT_CODES
 from app.utils import file_manager as fm
 
-fm.os.environ["QTWEBENGINE_CHROMIUM_FLAGS"] = "--disable-gpu"
-fm.os.environ["QT_QPA_PLATFORM"] = "xcb"
+fm.os.environ["QTWEBENGINE_CHROMIUM_FLAGS"] = "--disable-gpu" #all of these should go to settings.
+# fm.os.environ["QT_QPA_PLATFORM"] = "xcb"
 
 APP_DEFAULT_SETTINGS = {
     "projects": [
@@ -38,15 +38,15 @@ def read_app_config() -> object:
     if fm.path_exists(app_config_folder):
         try:
             return fm.read(app_config_file, True)
-        except fm.json.decoder.JSONDecodeError:
-            print("WARNING: File was corrupt, recreating app config.")
+        except fm.json.decoder.JSONDecodeError, FileNotFoundError:
+            print("WARNING: Config file is non-existing or corrupt, recreating app config.")
     else: #app settings is non existent
         fm.os.mkdir(app_config_folder)
 
     write_app_config(APP_DEFAULT_SETTINGS)
     return read_app_config()
 def write_app_config(new):
-    fm.write(app_config_file, new, indent=4)
+    fm.write(app_config_file, new)
 def list_projects() -> list[dict]:
     app_config = read_app_config()
     return app_config["projects"]
