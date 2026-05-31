@@ -1,5 +1,6 @@
 from app.utils import CustomPyQt as qt, project_manager as pt, tab_manager as TabManager, file_manager as fm
 from app.utils.code_manager import code_manager
+from app.ui.components.file_explorer import FileExplorer
 
 class ProjectEditorMenu(qt.CMenu):
     def __init__(self, parent, **kwargs):
@@ -22,54 +23,69 @@ class ProjectEditorMenu(qt.CMenu):
         self.setLayout(self.create_layout(qt.Qw.QVBoxLayout, "/"))
         self.edit_widget(self.get_widget("/", "layouts"), setContentsMargins=(0, 0, 0, 0), setSpacing=0)
 
-        self.edit_widget(self.create_widget(qt.Qw.QWidget, "/top"), setObjectName="main", setMaximumHeight=48, setLayout=self.create_layout(qt.Qw.QVBoxLayout, "/top"))
-        self.edit_widget(self.create_widget(qt.Qw.QWidget, "/center"), setObjectName="main", setMinimumHeight=64, setLayout=self.create_layout(qt.Qw.QVBoxLayout, "/center"))
+        self.edit_widget(self.create_widget(qt.Qw.QWidget, "/top"), setObjectName="main", setMaximumHeight=48,
+                        setLayout=self.create_layout(qt.Qw.QVBoxLayout, "/top"), setSizePolicy=(qt.Qw.QSizePolicy.Expanding, qt.Qw.QSizePolicy.Fixed))
+        self.edit_widget(self.create_widget(qt.Qw.QWidget, "/center"), setObjectName="main", setMinimumHeight=256, setLayout=self.create_layout(qt.Qw.QVBoxLayout, "/center"))
         self.edit_widget(self.get_widget("/top", "layouts"), setContentsMargins=(0, 0, 0, 0), setSpacing=0)
         self.edit_widget(self.get_widget("/center", "layouts"), setContentsMargins=(0, 0, 0, 0), setSpacing=0)
         #classes:
             #editor (monaco)
-        self.edit_widget(self.create_widget(Editor, "/editor", args={"name": "/editor", "object_name": "none"}), setSizePolicy=(qt.Qw.QSizePolicy.Minimum,qt.Qw.QSizePolicy.Minimum))
-        self.get_widget("/editor").on_browser_load_callbacks.append(self.load_tab_bar)
+        self.edit_widget(self.create_widget(qt.CSplitter, "/center/workspace"), setSizes=([200,600],), setSizePolicy=(qt.Qw.QSizePolicy.Expanding, qt.Qw.QSizePolicy.Expanding))
+        self.edit_widget(self.create_widget(Editor, "/center/workspace/editor", args={"name": "/center/workspace/editor", "object_name": "none"}), setMinimumWidth=512)
+        self.get_widget("/center/workspace/editor").on_browser_load_callbacks.append(self.load_tab_bar)
+        self.get_widget("/center/workspace").addWidget(self.get_widget("/center/workspace/editor"))
+        self.edit_widget(self.create_widget(FileExplorer, "/center/workspace/file-explorer", args={"project_path": qt.QtCore.QDir.currentPath()}),
+                         setMinimumWidth=192)
+        self.get_widget("/center/workspace").addWidget(self.get_widget("/center/workspace/file-explorer"))
 
+        
+        self.get_widget("/center/workspace").setCollapsible(0, False)
         self.edit_widget(self.create_widget(qt.CMenuBar, "/top/menu-bar"))
         self.addToLayout(self.get_widget("/top", "layouts"), "/top/menu-bar")
-        self.addToLayout(self.get_widget("/center", "layouts"), ("/editor",))
+        self.addToLayout(self.get_widget("/center", "layouts"), "/center/workspace")
         self.addToLayout(self.get_widget("/", "layouts"), ("/top", "/center"))
         
         self.setAllStyleSheet(self.cssStyle)
     
     def load_tab_bar(self):
-        self.edit_widget(self.create_widget(TabManager.TabBar, "/tab-manager", args={"reciever": self.get_widget("/editor"), "name": "/tab/tab-manager", "object_name": "main"}))
-        self.addToLayout(self.get_widget("/top", "layouts"), ("/tab-manager",))
+        self.edit_widget(self.create_widget(TabManager.TabBar, "/tab-bar", args={"reciever": self.get_widget("/center/workspace/editor"), "name": "/tab/tab-bar", "object_name": "main"}),
+                        setMaximumHeight=28)
+        self.addToLayout(self.get_widget("/top", "layouts"), ("/tab-bar",))
+        self.connect_to_signal(self.get_widget("/center/workspace/file-explorer"), file_opened=self.get_widget("/tab-bar").get_tab_manager().add_tab_from_path)
         self.config_menu_bar()
 
     def save_tab(self, save_as: bool = False) -> None:
-        tab_manager: TabManager.TabManager = self.get_widget("/tab-manager").get_tab_manager()
+        tab_manager: TabManager.TabManager = self.get_widget("/tab-bar").get_tab_manager()
         tab_manager.save_tab(tab_manager.get_current_tab(), save_as)
 
     def config_menu_bar(self):
         menu_bar: qt.CMenuBar = self.get_widget("/top/menu-bar")
-        tab_bar: TabManager.TabBar = self.get_widget("/tab-manager")
-        editor: Editor = self.get_widget("/editor")
+        tab_bar: TabManager.TabBar = self.get_widget("/tab-bar")
+        editor: Editor = self.get_widget("/center/workspace/editor")
 
         tab_manager = tab_bar.get_tab_manager()
 
         menu_bar.menus["file"].add_defaults()
         menu_bar.set_menu_action_callback("file", "new_file", tab_manager.add_tab)
+        menu_bar.set_menu_action_keybind("file", "new_file", "Ctrl+N")
         menu_bar.set_menu_action_callback("file", "open_file", tab_manager.add_tab_from_path)
+        menu_bar.set_menu_action_keybind("file", "open_file", "Ctrl+O")
         menu_bar.set_menu_action_callback("file", "save", self.save_tab)
+        menu_bar.set_menu_action_keybind("file", "save", "Ctrl+S")
         menu_bar.set_menu_action_callback("file", "save_as", lambda: self.save_tab(True))
+        menu_bar.set_menu_action_keybind("file", "save_as", "Ctrl+Shift+S")
         menu_bar.set_menu_action_callback("file", "exit", pt.get_parent_recursive(self, 2).close)
+        menu_bar.set_menu_action_keybind("file", "exit", "Ctrl+Q")
 
         menu_bar.menus["edit"].add_action("preferences", "Preferences")
         menu_bar.menus["edit"].add_action("auto_save", "Enable Auto Save")
         menu_bar.set_menu_action_callback("edit", "auto_save", code_manager.toggle_auto_save)
         menu_bar.menus["edit"].add_defaults()
-        menu_bar.set_menu_action_callback("edit", "undo", self.get_widget("/editor").history_do)
-        menu_bar.set_menu_action_callback("edit", "redo", lambda: self.get_widget("/editor").history_do(True))
-        menu_bar.set_menu_action_callback("edit", "cut", lambda: self.get_widget("/editor").clipboard_do("cut"))
-        menu_bar.set_menu_action_callback("edit", "copy", lambda: self.get_widget("/editor").clipboard_do("copy"))
-        menu_bar.set_menu_action_callback("edit", "paste", lambda: self.get_widget("/editor").clipboard_do("paste"))
+        menu_bar.set_menu_action_callback("edit", "undo", self.get_widget("/center/workspace/editor").history_do)
+        menu_bar.set_menu_action_callback("edit", "redo", lambda: self.get_widget("/center/workspace/editor").history_do(True))
+        menu_bar.set_menu_action_callback("edit", "cut", lambda: self.get_widget("/center/workspace/editor").clipboard_do("cut"))
+        menu_bar.set_menu_action_callback("edit", "copy", lambda: self.get_widget("/center/workspace/editor").clipboard_do("copy"))
+        menu_bar.set_menu_action_callback("edit", "paste", lambda: self.get_widget("/center/workspace/editor").clipboard_do("paste"))
 
         menu_bar.add_menu("view", qt.CContextMenu, title="View")
         menu_bar.menus["view"].add_action("editor_appearance", "Editor Appearance")
@@ -80,6 +96,12 @@ class ProjectEditorMenu(qt.CMenu):
         menu_bar.menus["view"].add_action("swap_chat_and_file_explorer", "Swap With Chat")
         menu_bar.menus["view"].addSeparator()
         menu_bar.menus["view"].add_action("tab_bar", "Show Tab Bar")
+        menu_bar.set_menu_action_callback("view", "file_explorer", lambda: self.get_widget("/center/workspace").toggle_collapse_widget(self.get_widget("/center/workspace/file-explorer")))
+        menu_bar.set_menu_action_keybind("view", "file_explorer", "Ctrl+B")
+        menu_bar.set_menu_action_callback("view", "menu_bar", lambda: self.toggleWidgetVisible(self.get_widget("/top/menu-bar")))
+        menu_bar.set_menu_action_keybind("view", "menu_bar", "Ctrl+Shift+M")
+        menu_bar.set_menu_action_callback("view", "tab_bar", lambda: self.toggleWidgetVisible(self.get_widget("/tab-bar")))
+        menu_bar.set_menu_action_keybind("view", "tab_bar", "Ctrl+Shift+T")
 
 class Editor(qt.CFrame):
     def __init__(self, *args, **kwargs):
@@ -148,9 +170,6 @@ class Editor(qt.CFrame):
             f"window.editor.setValue({escaped});",
             lambda _: setattr(self, "_setting_code", False)
         )
-
-class FileExplorer():
-    pass
 
 class AIAssistant():
     pass

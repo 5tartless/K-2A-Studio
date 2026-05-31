@@ -1,4 +1,4 @@
-import os, json
+import os, json, shutil
 from pathlib import Path
 
 def read(path: str, useJson=False):
@@ -26,3 +26,6 @@ def get_file_name(path) -> str:
     if path_exists(path):
         return os.path.basename(path)
     return ""
+
+def abspath(path) -> str:
+    return os.path.abspath(path)

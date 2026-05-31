@@ -5,13 +5,16 @@ class TabBar(qt.CFrame):
     def __init__(self, parent, *args, reciever=None, **kwargs):
         super().__init__(parent, *args, layout=qt.Qw.QHBoxLayout, **kwargs)
         self.edit_widget(self.get_widget(self.lname, "layouts"), setAlignment=(qt.QtCore.Qt.AlignLeft), setContentsMargins=(0, 0, 0, 0), setSpacing=10)
-        # self.edit_widget(self.create_widget(qt.Qw.QPushButton, "/add-tab"), setText="+", setObjectName="main", setMinimumWidth=32)
         self.create_widget(TabManager, "/manager", args={
             "reciever": reciever, "name": "/manager", "object_name": "main"
         })
         self.edit_widget(self.create_widget(qt.Qw.QScrollArea, "/tab"), setWidgetResizable=True, setWidget=self.get_widget("/manager"))
 
-        self.addToLayout(("/tab"))#, "/add-tab"))
+        self.window().addShortcut(
+            "close_tab",
+            "Ctrl+W",
+            lambda: self.get_tab_manager().request_kill_tab(self.get_tab_manager().current_tid))
+        self.addToLayout(("/tab"))
 
     def get_tab_manager(self) -> TabManager:
         return self.get_widget("/manager")
@@ -28,13 +31,28 @@ class TabManager(qt.CFrame):
         self.current_tid = -1
 
         self.edit_widget(self.get_widget(self.lname, "layouts"), setAlignment=(qt.QtCore.Qt.AlignLeft), setContentsMargins=(0, 0, 0, 0), setSpacing=10)
-        # self.connect_signal((self.parent().get_widget("/add-tab"),), {"clicked": self.add_tab})
+        self.add_tab(path=fm.abspath("src/samples/sample1.py"))
+    
+    def list_tabs(self) -> list:
+        tabs = []
+        for tab in self.tabs.values():
+            tabs.append(tab)
+        return tabs
 
-        self.add_tab(path="src/samples/sample1.py")
+    def find_tab(self, **tab_attributes) -> Tab:
+        for tab in self.tabs.values():
+            score: int = 0
+            for attr in tab_attributes:
+                if hasattr(tab, attr):
+                    if getattr(tab, attr) == tab_attributes[attr]:
+                        score += 1
+                else: break
+            if score == len(tab_attributes):
+                return tab
 
     def save_all_tabs(self):
         for tab in self.tabs.values():
-            if not tab.saved: self.save_tab(tab) #confirm feature
+            if not tab.saved: self.save_tab(tab) #needs confirm feature
     
     def are_all_tabs_saved(self) -> bool:
         for tab in self.tabs.values():
@@ -88,21 +106,30 @@ class TabManager(qt.CFrame):
             self.current_tid = tid
             self.add_to_tab_history(tid)
 
-    def add_tab_from_path(self, path: str):
-        path, _ = qt.Qw.QFileDialog.getOpenFileName(
-            self,
-            "Open File",
-            filter="All Files (*)"
-        )
+    def add_tab_from_path(self, path: str = None):
+        if not path:
+            path, _ = qt.Qw.QFileDialog.getOpenFileName(
+                self,
+                "Open File",
+                filter="All Files (*)"
+            )
         if path:
             file_name = path.split("/")[-1:][0]
             self.add_tab(file_name, path)
 
     def add_tab(self, title: str = None, path: str = None):
+        #check if tab exists
+        existing_tab = self.find_tab(title=title, path=path)
+        if existing_tab:
+            self.set_active(existing_tab.tid)
+            print("INFO: Tab is already open.")
+            return
+        #no? continue
+         
         self.max_tid += 1
 
         tab_name = self.get_tab_name(self.max_tid)
-        self.create_widget(Tab, tab_name, "tabs", args={
+        new_tab = self.create_widget(Tab, tab_name, "tabs", args={
             "tid": self.max_tid,
             "title": title or (f"Untitled-{self.max_tid}" if not path else fm.get_file_name(path)),
             "path": path,
@@ -110,14 +137,14 @@ class TabManager(qt.CFrame):
             "name": tab_name,
             "object_name": "main-top"
         })
-        self.connect_signal((self.get_widget(tab_name, "tabs"),), ({"request_kill": self.request_kill_tab, "clicked": self.set_active}))
+        self.connect_signal((new_tab,), ({"request_kill": self.request_kill_tab, "clicked": self.set_active}))
 
         self.addToLayout(tab_name, from_where="tabs")
         self.set_active(self.max_tid)
 
-    def request_kill_tab(self, tid: Tab):
+    def request_kill_tab(self, tid: int):
         code_manager.delete_code(self.get_tab_name(tid))
-        self.deleteWidgets(self.get_tab_name(tid), "tabs")
+        self.deleteWidgets(self.get_tab_name(tid), "tabs", False)
         self.remove_from_tab_history(tid)
         if self.tab_history:
             self.set_active(self.tab_history[-1:][0])
@@ -132,7 +159,7 @@ class Tab(qt.CFrame):
     def __init__(self, *args, tid: int, title: str, path: str, **kwargs):
         super().__init__(*args, layout=qt.Qw.QHBoxLayout, **kwargs)
         self._title: str = ""
-        self._saved: bool = True 
+        self._saved: bool = True
         self.tid = tid
         self.path = path
         self.receiver = kwargs["receiver"]
@@ -168,6 +195,10 @@ class Tab(qt.CFrame):
             self._title = value
             self.get_widget("/title").setText(value)
 
+    def rename(self, new_name: str) -> None:
+        self.path = fm.os.path.join(fm.os.path.dirname(self.path), new_name)
+        self.title = new_name
+        
     def callText(self):
         code_exists = code_manager.code_exists(self.name)
         
@@ -179,7 +210,12 @@ class Tab(qt.CFrame):
             code_manager.update_code(self.name, content)
         self.receiver.set_code(content)
 
-    def kill(self):
+    def kill(self, force: bool = False):
+        if not force and not self.saved:
+            reply = qt.Qw.QMessageBox.question(self, "Close tab", "Would you like to save this file?",
+                                               qt.Qw.QMessageBox.No | qt.Qw.QMessageBox.Yes)
+            if reply == qt.Qw.QMessageBox.Yes:
+                self.parent().save_tab(self)
         self.request_kill.emit(self.tid)
 
     def mousePressEvent(self, event):

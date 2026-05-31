@@ -25,9 +25,10 @@ class K2A_App(qt.CMainWindow):
                                 args={"cssRelativePath": self.cssPath, "debug": self.debug})
         )
         self.showMenu(4)
+
     
     def closeEvent(self, a0):
-        tab_manager = self.get_widget("projectEditorMenu").get_widget("/tab-manager").get_tab_manager()
+        tab_manager = self.get_widget("projectEditorMenu").get_widget("/tab-bar").get_tab_manager()
         tab_manager.save_all_tabs()
         if tab_manager.are_all_tabs_saved(): a0.accept()
         else: a0.ignore()

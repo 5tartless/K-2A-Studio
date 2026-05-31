@@ -82,7 +82,7 @@ class CCore():
                 current_line = word+" "
         if current_line: lines.append(current_line)
         return "\n".join(lines)
-    def connect_signal(self, widgets: tuple, signals: tuple[dict] | dict, onePerOne: bool = False) -> None:
+    def connect_signal(self, widgets: tuple, signals: tuple[dict] | dict, onePerOne: bool = False) -> None: #depracated
         if isinstance(signals, tuple):
             for i, d in enumerate(signals):
                 for signal in d:
@@ -94,11 +94,18 @@ class CCore():
                 for signal in signals:
                     if hasattr(widget, signal): getattr(widget, signal).connect(signals[signal])
                     if onePerOne: break
-    def deleteWidgets(self, widgets: str | tuple, fromWhere: str = "widgets") -> None:
+    def connect_to_signal(self, *widgets, **signals) -> None:
+        for widget in widgets:
+            for signal in signals:
+                if hasattr(widget, signal): getattr(widget, signal).connect(signals[signal])
+
+    def deleteWidgets(self, widgets: str | tuple, fromWhere: str = "widgets", register_error: bool = True) -> None:
         if hasattr(self, fromWhere):
             store = getattr(self, fromWhere)
             try: badWidgets = [store[widget] for widget in widgets] if type(widgets) == list else [store[widgets]]
-            except KeyError: print(f"WARNING: No widget in: {fromWhere}, aborting operation..."); return
+            except KeyError: 
+                if register_error: print(f"WARNING: No widget in '{fromWhere}', aborting operation...")
+                return
             for toDelete in badWidgets:
                 toDelete.deleteLater()
                 if type(widgets) == list:
@@ -126,6 +133,9 @@ class CCore():
         self.style().polish(self)
         self.update()
 
+    def toggleWidgetVisible(self, widget: Qw.QWidget):
+        widget.setVisible(not widget.isVisible())
+
 class CMainWindow(CCore, Qw.QMainWindow):
     def __init__(self, window: Qw.QApplication = None, winName: str = "KaModel", winSize: tuple = (800,600), cssRelativePath: str = "", debug: bool = False, parent = None):
         super().__init__()
@@ -134,6 +144,7 @@ class CMainWindow(CCore, Qw.QMainWindow):
             self.edit_widget(self, setGeometry=(600,300,winSize[0],winSize[1]), show=None, setWindowTitle=winName)
             self.setCentralWidget(self.create_widget(Qw.QStackedWidget, "stackedMenus"))
         self.debug = debug
+        self.shortcuts: dict = {}
         self.current_menu_index: int = None
     def showMenu(self, index: int, **kwargs): 
         self.get_widget("stackedMenus").setCurrentIndex(index)
@@ -141,6 +152,9 @@ class CMainWindow(CCore, Qw.QMainWindow):
         self.current_menu_index = index
     def addMenu(self, *widgets):
         for widget in widgets: self.get_widget("stackedMenus").addWidget(widget)
+    def addShortcut(self, name: str, keybind: str, callback) -> None:
+        self.shortcuts[name] = Qw.QShortcut(QtGui.QKeySequence(keybind), self)
+        self.shortcuts[name].activated.connect(callback)
 
 class CMenu(CCore, Qw.QWidget):
     def __init__(self, parent: any, **kwargs):
@@ -166,11 +180,16 @@ class CContextMenu(Qw.QMenu):
     def __init__(self, title: str, parent = None):
         super().__init__(title, parent)
         self.action_list: dict = {}
+        self.action_callbacks: dict = {}
     
     def add_action(self, key: str, name: str) -> Qw.QAction:
         action = self.addAction(name)
         self.action_list[key] = action
         return action
+
+    def connect_action(self, action: str, callback) -> None:
+        self.action_list[action].triggered.connect(callback)
+        self.action_callbacks[action] = callback
     
     def add_defaults(self, start_with_sep: bool = True):
         if start_with_sep: self.addSeparator()
@@ -228,7 +247,9 @@ class CMenuBar(Qw.QMenuBar):
         if not name in self.menus:
             self.menus[name] = self.addMenu(Menu(parent=self, **menu_kwargs)).menu()
     def set_menu_action_callback(self, name: str, action: str, callback):
-        self.menus[name].action_list[action].triggered.connect(callback)
+        self.menus[name].connect_action(action, callback)
+    def set_menu_action_keybind(self, name: str, action: str, keybind: str):
+        self.window().addShortcut(name, keybind, self.menus[name].action_callbacks[action])
 
 class Worker(QtCore.QThread):
     workerFinished = QtCore.pyqtSignal(object)
@@ -342,6 +363,23 @@ class CTable(Qw.QTableWidget):
     def setHHeaderLabels(self, items: list): self.setHorizontalHeaderLabels(items)
     def setVHeaderLabels(self, items: list): self.setVerticalHeaderLabels(items)
 
+class CSplitter(Qw.QSplitter):
+    def __init__(self, parent = None):
+        super().__init__(parent)
+
+    def toggle_collapse_widget(self, widget: Qw.QWidget):
+        sizes = self.sizes()
+        w_index = self.indexOf(widget)
+        self.collapse(w_index, 0 if sizes[w_index] != 0 else widget.minimumWidth())
+
+    def collapse_widget(self, widget: Qw.QWidget):
+        self.collapse(self.indexOf(widget))
+
+    def collapse(self, index: int, size: int = 0):
+        sizes = self.sizes()
+        sizes[index] = size
+        self.setSizes(sizes)
+        
 class CFrame(CCore, Qw.QFrame):
     #could act as a card or just a frame that contains more widgets
 
@@ -402,6 +440,16 @@ class CBridge(QtCore.QObject):
             self.value = value
             print("value: ", value)
         self.on_value_changed = on_value_changed
+
+class CSideBarFileExplorer(Qw.QTreeView):
+    def __init__(self, parent = None, project_path: str = QtCore.QDir.rootPath()):
+        super().__init__(parent)
+        self.file_model = Qw.QFileSystemModel(self)
+        self.file_model.setRootPath(QtCore.QDir.rootPath())
+
+        self.setModel(self.file_model)
+        self.setRootIndex(self.file_model.index(project_path))
+        self.project_path = project_path
 
 #functions
 def create_timer(parent=None, time_out_callback=None, interval=500) -> QtCore.QTimer:

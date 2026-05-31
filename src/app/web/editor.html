@@ -5,7 +5,7 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box;}
         body { overflow: hidden; background: #1e1e1e;}
-        #editor { width: 100vw; height: 100vw;}
+        #editor { width: 100vw; height: 100vh; overflow: hidden;}
     </style>
 </head>
 <body>
@@ -22,7 +22,13 @@
                     language: 'python',
                     theme: 'vs-dark',
                     fontSize: 14,
-                    automaticLayout: true
+                    automaticLayout: true,
+                    scrollBeyondLastLine: false,
+                    scrollbar: {
+                        vertical: 'auto',
+                        horizontal: 'auto',
+                        alwaysConsumeMouseWheel: false
+                    }
                 })
             })
         </script>
