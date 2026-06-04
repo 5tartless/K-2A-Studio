@@ -21,3 +21,15 @@
 #tester{
     background-color: rgba(163, 94, 231, 60);
 }
+
+#user-message{
+    background-color: #b1c5a1;
+    border-radius: 10px;
+    padding: 5px;
+}
+
+#assistant-message{
+    background-color: #FFFFFF;
+    border-radius: 10px;
+    padding: 5px;
+}

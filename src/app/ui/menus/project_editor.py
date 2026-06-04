@@ -1,6 +1,7 @@
 from app.utils import CustomPyQt as qt, project_manager as pt, tab_manager as TabManager, file_manager as fm
 from app.utils.code_manager import code_manager
 from app.ui.components.file_explorer import FileExplorer
+from app.ui.components.chat_view import ChatView
 
 class ProjectEditorMenu(qt.CMenu):
     def __init__(self, parent, **kwargs):
@@ -28,23 +29,40 @@ class ProjectEditorMenu(qt.CMenu):
         self.edit_widget(self.create_widget(qt.Qw.QWidget, "/center"), setObjectName="main", setMinimumHeight=256, setLayout=self.create_layout(qt.Qw.QVBoxLayout, "/center"))
         self.edit_widget(self.get_widget("/top", "layouts"), setContentsMargins=(0, 0, 0, 0), setSpacing=0)
         self.edit_widget(self.get_widget("/center", "layouts"), setContentsMargins=(0, 0, 0, 0), setSpacing=0)
-        #classes:
             #editor (monaco)
-        self.edit_widget(self.create_widget(qt.CSplitter, "/center/workspace"), setSizes=([200,600],), setSizePolicy=(qt.Qw.QSizePolicy.Expanding, qt.Qw.QSizePolicy.Expanding))
+        self.edit_widget(self.create_widget(qt.CSplitter, "/center/workspace"), setSizePolicy=(qt.Qw.QSizePolicy.Expanding, qt.Qw.QSizePolicy.Expanding))
+        #classes:
+            #chat-view
+        self.edit_widget(
+            self.create_widget(
+                ChatView,
+                "/center/workspace/chat-view",
+                args={"name": "/center/workspace/chat-view", "object_name": "main"}
+            ),
+            setMinimumWidth=256,
+            setSizePolicy=(qt.Qw.QSizePolicy.Expanding, qt.Qw.QSizePolicy.Expanding)
+        )
         self.edit_widget(self.create_widget(Editor, "/center/workspace/editor", args={"name": "/center/workspace/editor", "object_name": "none"}), setMinimumWidth=512)
         self.get_widget("/center/workspace/editor").on_browser_load_callbacks.append(self.load_tab_bar)
-        self.get_widget("/center/workspace").addWidget(self.get_widget("/center/workspace/editor"))
-        self.edit_widget(self.create_widget(FileExplorer, "/center/workspace/file-explorer", args={"project_path": qt.QtCore.QDir.currentPath()}),
-                         setMinimumWidth=192)
-        self.get_widget("/center/workspace").addWidget(self.get_widget("/center/workspace/file-explorer"))
-
+            #file-explorer
+        self.edit_widget(
+            self.create_widget(
+                FileExplorer,
+                "/center/workspace/file-explorer",
+                args={"project_path": qt.QtCore.QDir.currentPath()}
+            ),
+            setMinimumWidth=192
+        )
         
-        self.get_widget("/center/workspace").setCollapsible(0, False)
+        self.get_widget("/center/workspace").addWidget(self.get_widget("/center/workspace/chat-view"))
+        self.get_widget("/center/workspace").addWidget(self.get_widget("/center/workspace/editor"))
+        self.get_widget("/center/workspace").addWidget(self.get_widget("/center/workspace/file-explorer"))
+        self.get_widget("/center/workspace").setCollapsible(1, False)
+ 
         self.edit_widget(self.create_widget(qt.CMenuBar, "/top/menu-bar"))
         self.addToLayout(self.get_widget("/top", "layouts"), "/top/menu-bar")
         self.addToLayout(self.get_widget("/center", "layouts"), "/center/workspace")
         self.addToLayout(self.get_widget("/", "layouts"), ("/top", "/center"))
-        
         self.setAllStyleSheet(self.cssStyle)
     
     def load_tab_bar(self):
@@ -89,13 +107,15 @@ class ProjectEditorMenu(qt.CMenu):
 
         menu_bar.add_menu("view", qt.CContextMenu, title="View")
         menu_bar.menus["view"].add_action("editor_appearance", "Editor Appearance")
-        menu_bar.menus["view"].add_action("chat", "Show Chat")
         menu_bar.menus["view"].add_action("menu_bar", "Show Menu Bar")
         menu_bar.menus["view"].addSeparator()
         menu_bar.menus["view"].add_action("file_explorer", "Show File Explorer")
+        menu_bar.menus["view"].add_action("chat", "Show Chat")
         menu_bar.menus["view"].add_action("swap_chat_and_file_explorer", "Swap With Chat")
         menu_bar.menus["view"].addSeparator()
         menu_bar.menus["view"].add_action("tab_bar", "Show Tab Bar")
+        menu_bar.set_menu_action_callback("view", "chat", lambda: self.get_widget("/center/workspace").toggle_collapse_widget(self.get_widget("/center/workspace/chat-view")))
+        menu_bar.set_menu_action_keybind("view", "chat", "Ctrl+Shift+B")
         menu_bar.set_menu_action_callback("view", "file_explorer", lambda: self.get_widget("/center/workspace").toggle_collapse_widget(self.get_widget("/center/workspace/file-explorer")))
         menu_bar.set_menu_action_keybind("view", "file_explorer", "Ctrl+B")
         menu_bar.set_menu_action_callback("view", "menu_bar", lambda: self.toggleWidgetVisible(self.get_widget("/top/menu-bar")))
@@ -103,6 +123,7 @@ class ProjectEditorMenu(qt.CMenu):
         menu_bar.set_menu_action_callback("view", "tab_bar", lambda: self.toggleWidgetVisible(self.get_widget("/tab-bar")))
         menu_bar.set_menu_action_keybind("view", "tab_bar", "Ctrl+Shift+T")
 
+#should be moved like all components
 class Editor(qt.CFrame):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, layout=qt.Qw.QVBoxLayout, **kwargs)
@@ -170,6 +191,3 @@ class Editor(qt.CFrame):
             f"window.editor.setValue({escaped});",
             lambda _: setattr(self, "_setting_code", False)
         )
-
-class AIAssistant():
-    pass

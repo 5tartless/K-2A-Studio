@@ -429,7 +429,23 @@ class PollCLineEdit(CFrame):
         return self.get_widget("/title")
     def getLineEdit(self) -> object:
         return self.get_widget("/line-edit")
-    
+
+class CTextEdit(CCore, Qw.QTextEdit):
+    def __init__(self, parent = None, *args, **kwargs):
+        super().__init__(parent, *args, **kwargs)
+        self.edit_widget(
+            self,
+            setMinimumHeight=36,
+            setMaximumHeight=120,
+            setSizePolicy=(Qw.QSizePolicy.Expanding, Qw.QSizePolicy.Minimum),
+            setVerticalScrollBarPolicy=QtCore.Qt.ScrollBarAlwaysOff,
+        )
+        self.document().contentsChanged.connect(self.adjust_height)
+    def adjust_height(self):
+        doc_height = self.document().size().height()
+        new_height = max(36, min(int(doc_height) + 10, 120))
+        self.setFixedHeight(new_height)
+
 class CBridge(QtCore.QObject):
     def __init__(self, parent=None, value = None):
         super().__init__(parent)

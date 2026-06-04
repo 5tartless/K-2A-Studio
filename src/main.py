@@ -10,7 +10,6 @@ import sys
 class K2A_App(qt.CMainWindow):
     def __init__(self, window = None, winName = "KaModel", winSize = ..., cssRelativePath = "", debug = False, parent=None):
         super().__init__(window, winName, winSize, cssRelativePath, debug, parent)
-        self.setMinimumWidth(750)
 
         self.menu_fader = qt.AnimationFader(self.get_widget("stackedMenus"))
         self.addMenu(self.create_widget(HomeMenu, "homeMenu", createVisible=False, 
