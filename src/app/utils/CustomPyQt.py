@@ -12,8 +12,8 @@ class CCore():
         with open(path, "r") as file: return file.read()
     def create_widget(self, widget: any, name: str, store_in: str = "", args: list | dict = [], createVisible: bool = True) -> any: #creates a widget locally
         if (not name in self.widgets) if not store_in else (not name in getattr(self, store_in)):
-            if type(args) == list: value = widget(self, *args)
-            else: value = widget(self, **args)
+            if type(args) == list: value = widget(*args, parent=self)
+            else: value = widget(parent=self, **args)
             #value = widget(self, *[] if not args else args) if type(args) == list else widget(self, **args)
             if not store_in:
                 self.widgets[name] = value
@@ -66,7 +66,7 @@ class CCore():
             if not name in store: return None
             return store[name]
         else: return None
-    def wrapText(self, text: str, word_limit: int) -> str: #** 1.86)
+    def wrapText(self, text: str, word_limit: int) -> str: # depracated /** 1.86)
         lines = []
         current_line = ""
         for word in text.split(" "):
@@ -82,6 +82,29 @@ class CCore():
                 current_line = word+" "
         if current_line: lines.append(current_line)
         return "\n".join(lines)
+    
+    def wrap_text(self, text: str, word_limit: int, word_max_lenght: int) -> str:
+        lines: list = []
+        current_line: str = ""
+        for word in text.split(" "):
+            if len(word) > word_max_lenght:
+                if current_line:
+                    lines.append(current_line)
+                    current_line = ""
+                while len(word) > word_max_lenght:
+                    lines.append(word[:word_max_lenght])
+                    word = word[word_max_lenght:]
+
+            if len(current_line.split(" ")) >= word_limit:
+                lines.append(current_line+word+" ")
+                current_line = ""
+            else:
+                current_line += word+" "
+
+        if not lines or lines[len(lines) - 1] != current_line:
+            lines.append(current_line)
+        return "\n".join(lines)
+
     def connect_signal(self, widgets: tuple, signals: tuple[dict] | dict, onePerOne: bool = False) -> None: #depracated
         if isinstance(signals, tuple):
             for i, d in enumerate(signals):
@@ -367,6 +390,17 @@ class CSplitter(Qw.QSplitter):
     def __init__(self, parent = None):
         super().__init__(parent)
 
+    def reverse_order(self, *widgets):
+        indexes: list = [self.indexOf(widget) for widget in widgets]
+        reversed_indexes: dict = {}
+        for i, index in enumerate(reversed(indexes)):
+            reversed_indexes[widgets[i]] = index
+        self.set_widgets_index(reversed_indexes)
+
+    def set_widgets_index(self, widgets: dict):
+        for widget, index in widgets.items():
+            self.insertWidget(index, widget)
+
     def toggle_collapse_widget(self, widget: Qw.QWidget):
         sizes = self.sizes()
         w_index = self.indexOf(widget)
@@ -431,6 +465,8 @@ class PollCLineEdit(CFrame):
         return self.get_widget("/line-edit")
 
 class CTextEdit(CCore, Qw.QTextEdit):
+    return_pressed = QtCore.pyqtSignal()
+
     def __init__(self, parent = None, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
         self.edit_widget(
@@ -441,6 +477,15 @@ class CTextEdit(CCore, Qw.QTextEdit):
             setVerticalScrollBarPolicy=QtCore.Qt.ScrollBarAlwaysOff,
         )
         self.document().contentsChanged.connect(self.adjust_height)
+
+    def keyPressEvent(self, e):
+        if e.key() == QtCore.Qt.Key_Return and not e.modifiers():
+            self.return_pressed.emit()
+        elif e.key() == QtCore.Qt.Key_Return and e.modifiers() == QtCore.Qt.ShiftModifier:
+            super().keyPressEvent(e)
+        else:
+            super().keyPressEvent(e)
+
     def adjust_height(self):
         doc_height = self.document().size().height()
         new_height = max(36, min(int(doc_height) + 10, 120))

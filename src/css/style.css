@@ -24,12 +24,14 @@
 
 #user-message{
     background-color: #b1c5a1;
+    color: black;
     border-radius: 10px;
     padding: 5px;
 }
 
 #assistant-message{
     background-color: #FFFFFF;
+    color: black;
     border-radius: 10px;
     padding: 5px;
 }

@@ -1,4 +1,5 @@
 from app.utils.CustomPyQt import CFrame, CTextEdit, Qw, QtCore
+from app.ui.components.message import MessageContainer
 from app.utils import file_manager as fm, project_manager as pt
 
 class ChatView(CFrame):
@@ -12,7 +13,8 @@ class ChatView(CFrame):
                 ChatContainer,
                 "/chat-container",
                 args={"name": "/chat-container", "object_name": "main"}
-            )
+            ),
+            setContentsMargins=(5,5,5,5)
         )
         self.edit_widget(
             self.create_widget(
@@ -30,13 +32,14 @@ class ChatView(CFrame):
             ),
             setMinimumHeight=96,
             setMaximumHeight=256,
-            setsizePolicy=(Qw.QSizePolicy.Expanding, Qw.QSizePolicy.Minimum)
+            setSizePolicy=(Qw.QSizePolicy.Preferred, Qw.QSizePolicy.Minimum)
         )
         self.addToLayout(("/chat-scroll-area", "/input-area"))
 
 class ChatContainer(CFrame):
     def __init__(self, parent, layout=Qw.QVBoxLayout, *args, **kwargs):
         super().__init__(parent, layout=layout, *args, **kwargs)
+        
         self.edit_widget(
             self.get_widget(self.lname, "layouts"),
             setAlignment=QtCore.Qt.AlignTop
@@ -44,15 +47,15 @@ class ChatContainer(CFrame):
 
     def add_message(self, text: str, from_: str = "user"):
         message_name = f"/message-{len(self.widgets)}"
-        self.edit_widget(
-            self.create_widget(
-                MessageBubble,
-                message_name,
-                args={"name": message_name, "from_": from_, "object_name": "main-top"}
-            ),
-            set_text=text,
-            setMinimumHeight=32,
-            setSizePolicy=(Qw.QSizePolicy.Expanding, Qw.QSizePolicy.Minimum)
+        self.create_widget(
+            MessageContainer,
+            message_name,
+            args={
+                "name": message_name,
+                # "object_name": "main",
+                "text": text,
+                "from_": from_ 
+            }
         )
         self.addToLayout(message_name)
         pt.get_parent_recursive(self, 3).message_added.emit(text, from_)
@@ -83,7 +86,7 @@ class InputArea(CFrame):
                     self.get_widget("/send-button"),
                     self.get_widget("/message-input"),
                     clicked=lambda: self.callback(from_="assistant"), #debugging
-                    returnPressed=self.callback)
+                    return_pressed=self.callback)
             self.addToLayout(("/message-input", "/send-button"))
             self.get_widget(self.lname, "layouts").setAlignment(self.get_widget("/send-button"), QtCore.Qt.AlignBottom)
 
@@ -121,35 +124,9 @@ class InputArea(CFrame):
 
     def send_message(self, from_="user"):
         message_input = self.get_widget("/message-container").get_widget("/message-input")
-        message_text = message_input.text()
-        if message_text.strip():
+        message_text = message_input.toPlainText().strip()
+        if message_text:
             chat_container = self.parent().get_widget("/chat-container")
             chat_container.add_message(message_text, from_=from_)
             message_input.clear()
-
-class MessageBubble(CFrame):
-    def __init__(self, parent, from_, *args, layout=Qw.QHBoxLayout, **kwargs):
-        super().__init__(parent, layout=layout, *args, **kwargs)
-        self.from_ = from_
-        layout = self.get_widget(self.lname, "layouts")
-        if self.from_ == "user":
-            self.setObjectName("user-message")
-            layout.setAlignment(QtCore.Qt.AlignRight)
-        elif self.from_ == "assistant":
-            self.setObjectName("assistant-message")
-            layout.setAlignment(QtCore.Qt.AlignLeft)
-        else:
-            self.setObjectName("system-message")
-            layout.setAlignment(QtCore.Qt.AlignCenter)
-    
-    def set_text(self, text: str):
-        self.edit_widget(
-            self.create_widget(
-                Qw.QLabel,
-                "/message-label",
-            ) if not self.get_widget("/message-label") else self.get_widget("/message-label"),
-            setText=text,
-            setWordWrap=True,
-            setTextInteractionFlags=QtCore.Qt.TextSelectableByMouse
-        )
-        self.addToLayout("/message-label")
+            message_input.setFocus(True)
