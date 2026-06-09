@@ -31,7 +31,6 @@ class TabManager(qt.CFrame):
         self.current_tid = -1
 
         self.edit_widget(self.get_widget(self.lname, "layouts"), setAlignment=(qt.QtCore.Qt.AlignLeft), setContentsMargins=(0, 0, 0, 0), setSpacing=10)
-        self.add_tab(path=fm.abspath("src/samples/sample1.py"))
     
     def list_tabs(self) -> list:
         tabs = []

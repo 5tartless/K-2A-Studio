@@ -23,14 +23,16 @@ class K2A_App(qt.CMainWindow):
             self.create_widget(ProjectEditorMenu, "projectEditorMenu", createVisible=False, 
                                 args={"cssRelativePath": self.cssPath, "debug": self.debug})
         )
-        self.showMenu(4)
-
+        self.showMenu(0)
     
     def closeEvent(self, a0):
-        tab_manager = self.get_widget("projectEditorMenu").get_widget("/tab-bar").get_tab_manager()
-        tab_manager.save_all_tabs()
-        if tab_manager.are_all_tabs_saved(): a0.accept()
-        else: a0.ignore()
+        if self.current_menu_index == 4:
+            tab_manager = self.get_widget("projectEditorMenu").get_widget("/tab-bar").get_tab_manager()
+            tab_manager.save_all_tabs()
+            if not tab_manager.are_all_tabs_saved(): 
+                a0.ignore()
+                return
+        a0.accept()
 
 if __name__ == "__main__":
     pt.setup()

@@ -3,9 +3,11 @@ from pathlib import Path
 
 def read(path: str, useJson=False):
     content = None
-    with open(path, "r") as file:
-        content = file.read() if not useJson else json.load(file)
-
+    try:
+        with open(path, "r") as file:
+            content = file.read() if not useJson else json.load(file)
+    except UnicodeDecodeError:
+        content = "Couldn't read file properly."
     return content
 
 def write(path: str, content, string_mode: bool = False):

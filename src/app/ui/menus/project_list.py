@@ -97,8 +97,12 @@ class ProjectEdit(qt.CFrame):
 
     def setVersion(self, txt: str):
         self.get_widget("/version").setText(self.wrapText(txt, 20))
+    
     def clickedEdit(self):
-        pass
+        pt.get_parent_recursive(self, 8).showMenu(
+            4,
+            project_data=self.parent().project_data
+        )
 
 
 class NoProjectsFound(qt.CFrame):
@@ -109,6 +113,4 @@ class NoProjectsFound(qt.CFrame):
         self.edit_widget(self.create_widget(qt.Qw.QLabel, "/subtitle"), setText="You can go to home if you want to add a project.", setObjectName="main")
 
         self.addToLayout(("/title", "/subtitle"))
-
-
 

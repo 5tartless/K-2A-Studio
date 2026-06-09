@@ -11,7 +11,7 @@ class ProjectEditorMenu(qt.CMenu):
         code_manager._auto_save_timer.timeout.connect(self.save_tab)
 
     def appear(self, **kwargs):
-        self.load(kwargs)
+        self.load(**kwargs)
 
     def hideEvent(self, a0): #this feature should be moved alongside load to make the app less ram consuming.
         for widget in self.widgets.copy():
@@ -20,9 +20,11 @@ class ProjectEditorMenu(qt.CMenu):
             del self.layouts[layout]
 
         return super().hideEvent(a0)
+    
+    def load(self, **kwargs):
+        project_data: dict = kwargs.get("project_data", {})
+        print("Data recieved: ", project_data)
 
-    def load(self, project_data):
-        # print("Data recieved: ", project_data)
         self.setLayout(self.create_layout(qt.Qw.QVBoxLayout, "/"))
         self.edit_widget(self.get_widget("/", "layouts"), setContentsMargins=(0, 0, 0, 0), setSpacing=0)
 
@@ -48,7 +50,7 @@ class ProjectEditorMenu(qt.CMenu):
                 FileExplorer,
                 "/center/workspace/file-explorer",
                 args={
-                    "project_path": qt.QtCore.QDir.currentPath()
+                    "project_path": project_data["path"] #qt.QtCore.QDir.currentPath()
                 }
             ),
             setMinimumWidth=192
