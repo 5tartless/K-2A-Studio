@@ -10,14 +10,28 @@ class TabBar(qt.CFrame):
         })
         self.edit_widget(self.create_widget(qt.Qw.QScrollArea, "/tab"), setWidgetResizable=True, setWidget=self.get_widget("/manager"))
 
+        self.edit_widget(
+            self.create_widget(qt.Qw.QPushButton, "/run-button"),
+            setText="▶ Run",
+            setToolTip="Ejecutar el código del archivo actual (F5)",
+            setSizePolicy=(qt.Qw.QSizePolicy.Fixed, qt.Qw.QSizePolicy.Fixed)
+        )
+        self.connect_to_signal(self.get_widget("/run-button"), clicked=self.run_current_code)
+
         self.window().addShortcut(
             "close_tab",
             "Ctrl+W",
             lambda: self.get_tab_manager().request_kill_tab(self.get_tab_manager().current_tid))
-        self.addToLayout(("/tab"))
+        self.window().addShortcut("run_code", "F5", self.run_current_code)
+        self.addToLayout(("/tab", "/run-button"))
 
     def get_tab_manager(self) -> TabManager:
         return self.get_widget("/manager")
+
+    def run_current_code(self):
+        project_menu = pt.get_parent_recursive(self, 2)
+        if hasattr(project_menu, "run_code"):
+            project_menu.run_code()
         
 class TabManager(qt.CFrame):
     def __init__(self, parent, *args, reciever: object, **kwargs):

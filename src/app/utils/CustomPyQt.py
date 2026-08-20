@@ -148,8 +148,10 @@ class CCore():
                 for layout in layouts: restore(store[layout])
             else: restore(store[layouts])
     def getAbsolutePath(self, relative: str) -> str:
-        base = getattr(sys, "_MEIPASS", os.path.abspath("."))
-        return os.path.join(base, relative)
+        if hasattr(sys, "_MEIPASS"):
+            return os.path.join(sys._MEIPASS, relative)
+        from app.utils.file_manager import resolve  # import local para evitar ciclos de import
+        return resolve(relative)
     
     def reloadStyleSheet(self):
         self.style().unpolish(self)
@@ -328,6 +330,12 @@ class AnimationFader(AnimationPlayer, Qw.QGraphicsOpacityEffect):
         def end_value_finished(): self.isPlaying = False; self.faderPlayer.finished.disconnect(end_value_finished)
         def unfade():
             if middleFunction: middleFunction()
+            # El contenido del menú (p. ej. la lista de proyectos) pudo haber creado widgets
+            # nuevos durante middleFunction(). Como este widget tiene un QGraphicsOpacityEffect
+            # aplicado, Qt puede seguir usando una versión "cacheada" de su render y no mostrar
+            # esos widgets nuevos hasta que algo fuerce un repintado (ej. mover el mouse encima).
+            # Forzamos ese repintado aquí, un tick después de que termine de procesarse el layout.
+            QtCore.QTimer.singleShot(0, self.parent().update)
             self.faderPlayer.finished.disconnect(unfade)
             if not skipEndValue: 
                 self.connect_signal((self.faderPlayer, ), {"finished": end_value_finished}, True)

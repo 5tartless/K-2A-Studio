@@ -1,6 +1,7 @@
 from app.ui.components import tab_manager as TabManager
 from app.utils import CustomPyQt as qt, project_manager as pt, file_manager as fm
 from app.utils.code_manager import code_manager
+from app.utils import code_runner
 from app.ui.components.file_explorer import FileExplorer
 from app.ui.components.editor import Editor
 from app.ui.components.chat_view import ChatView
@@ -84,3 +85,45 @@ class ProjectEditorMenu(qt.CMenu):
     def save_tab(self, save_as: bool = False) -> None:
         tab_manager: TabManager.TabManager = self.get_widget("/tab-bar").get_tab_manager()
         tab_manager.save_tab(tab_manager.get_current_tab(), save_as)
+
+    def run_code(self) -> None:
+        editor = self.get_widget("/center/workspace/editor")
+        chat_view = self.get_widget("/center/workspace/chat-view")
+        if not editor or not chat_view:
+            return
+
+        code = editor.current_code.value or ""
+        if not code.strip():
+            return
+
+        extension = ".py"
+        if editor.tab_manager and editor.tab_manager.current_tid >= 0:
+            tab = editor.tab_manager.get_tab(editor.tab_manager.current_tid)
+            if tab and tab.path:
+                _, ext = fm.os.path.splitext(tab.path)
+                if ext:
+                    extension = ext
+
+        chat_container = chat_view.get_widget("/chat-container")
+        chat_container.add_message("▶️ Ejecutando código...", from_="system")
+
+        if not hasattr(self, "_run_workers"):
+            self._run_workers = []
+
+        worker = qt.Worker(lambda: code_runner.run_code(code, extension))
+        worker.workerFinished.connect(lambda result: self._on_run_finished(result, chat_container, worker))
+        self._run_workers.append(worker)
+        worker.start()
+
+    def _on_run_finished(self, result: dict, chat_container, worker) -> None:
+        if result.get("exit_code") == 0 and not result.get("stderr"):
+            output = result.get("stdout") or "(el código se ejecutó sin salida)"
+            message = f"✅ Resultado:\n{output}"
+        else:
+            output = result.get("stderr") or result.get("stdout") or "Ocurrió un error desconocido."
+            message = f"❌ Error:\n{output}"
+
+        chat_container.add_message(message, from_="system")
+
+        if worker in getattr(self, "_run_workers", []):
+            self._run_workers.remove(worker)
