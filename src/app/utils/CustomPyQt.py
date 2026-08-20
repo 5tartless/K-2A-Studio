@@ -1,4 +1,4 @@
-from PyQt5 import QtCore, QtWidgets as Qw, QtGui
+from PyQt5 import QtCore, QtWidgets as Qw, QtGui, QtWebEngineWidgets, QtWebChannel
 import os, sys
 
 class CCore():
@@ -12,8 +12,8 @@ class CCore():
         with open(path, "r") as file: return file.read()
     def create_widget(self, widget: any, name: str, store_in: str = "", args: list | dict = [], createVisible: bool = True) -> any: #creates a widget locally
         if (not name in self.widgets) if not store_in else (not name in getattr(self, store_in)):
-            if type(args) == list: value = widget(self, *args)
-            else: value = widget(self, **args)
+            if type(args) == list: value = widget(*args, parent=self)
+            else: value = widget(parent=self, **args)
             #value = widget(self, *[] if not args else args) if type(args) == list else widget(self, **args)
             if not store_in:
                 self.widgets[name] = value
@@ -29,19 +29,22 @@ class CCore():
             if not store_in: self.layouts[name] = newLayout
             else: store_side = getattr(self, store_in); store_side[name] = newLayout
         return newLayout
-    def addToLayout(self, layout: Qw.QLayout, items: str | tuple[str]):
+    def addToLayout(self, layout: Qw.QLayout, items: str | tuple[str], from_where: str = None):
+        store_in = getattr(self, from_where) if from_where else self.widgets
         if type(items) == tuple:
             for item in items:
-                if type(item) == tuple: self.edit_widget(layout, addWidget=(self.widgets[item[0]], *item[1:]))
+                if type(item) == tuple: self.edit_widget(layout, addWidget=(store_in[item[0]], *item[1:]))
                 else:
-                    if item[:2] != "-s": self.edit_widget(layout, addWidget=self.widgets[item])
+                    if item[:2] != "-s": self.edit_widget(layout, addWidget=store_in[item])
                     else: self.edit_widget(layout, addStretch=int(item[2:]))
-        else: self.edit_widget(layout, addWidget=self.widgets[items])
+        else: self.edit_widget(layout, addWidget=store_in[items])
     def find(self, obj_in: any, what: any) -> int:
         finder = 0
         for i in obj_in:
             if i == what: return finder
             finder += 1
+    def update_style_sheet(self) -> None:
+        self.setStyleSheet(Qw.QApplication.instance().styleSheet())
     def edit_widget(self, widget, **kwargs): #edits a label by passing methods and arguments like this: setText="MyText"
         widgetOptions = [getattr(widget, func) for func in kwargs if hasattr(widget, func)]
         args = {} #label.setText : [kwargs["setText"]] if "setText" in kwargs else []... like this but in a lot of lines of code
@@ -63,7 +66,7 @@ class CCore():
             if not name in store: return None
             return store[name]
         else: return None
-    def wrapText(self, text: str, word_limit: int) -> str: #** 1.86)
+    def wrapText(self, text: str, word_limit: int) -> str: # depracated /** 1.86)
         lines = []
         current_line = ""
         for word in text.split(" "):
@@ -79,7 +82,30 @@ class CCore():
                 current_line = word+" "
         if current_line: lines.append(current_line)
         return "\n".join(lines)
-    def connect_signal(self, widgets: tuple, signals: tuple[dict] | dict, onePerOne: bool = False) -> None:
+    
+    def wrap_text(self, text: str, word_limit: int, word_max_lenght: int) -> str:
+        lines: list = []
+        current_line: str = ""
+        for word in text.split(" "):
+            if len(word) > word_max_lenght:
+                if current_line:
+                    lines.append(current_line)
+                    current_line = ""
+                while len(word) > word_max_lenght:
+                    lines.append(word[:word_max_lenght])
+                    word = word[word_max_lenght:]
+
+            if len(current_line.split(" ")) >= word_limit:
+                lines.append(current_line+word+" ")
+                current_line = ""
+            else:
+                current_line += word+" "
+
+        if not lines or lines[len(lines) - 1] != current_line:
+            lines.append(current_line)
+        return "\n".join(lines)
+
+    def connect_signal(self, widgets: tuple, signals: tuple[dict] | dict, onePerOne: bool = False) -> None: #depracated
         if isinstance(signals, tuple):
             for i, d in enumerate(signals):
                 for signal in d:
@@ -91,11 +117,18 @@ class CCore():
                 for signal in signals:
                     if hasattr(widget, signal): getattr(widget, signal).connect(signals[signal])
                     if onePerOne: break
-    def deleteWidgets(self, widgets: str | tuple, fromWhere: str = "widgets") -> None:
+    def connect_to_signal(self, *widgets, **signals) -> None:
+        for widget in widgets:
+            for signal in signals:
+                if hasattr(widget, signal): getattr(widget, signal).connect(signals[signal])
+
+    def deleteWidgets(self, widgets: str | tuple, fromWhere: str = "widgets", register_error: bool = True) -> None:
         if hasattr(self, fromWhere):
             store = getattr(self, fromWhere)
             try: badWidgets = [store[widget] for widget in widgets] if type(widgets) == list else [store[widgets]]
-            except KeyError: print(f"WARNING: No widget in: {fromWhere}, aborting operation..."); return
+            except KeyError: 
+                if register_error: print(f"WARNING: No widget in '{fromWhere}', aborting operation...")
+                return
             for toDelete in badWidgets:
                 toDelete.deleteLater()
                 if type(widgets) == list:
@@ -115,8 +148,18 @@ class CCore():
                 for layout in layouts: restore(store[layout])
             else: restore(store[layouts])
     def getAbsolutePath(self, relative: str) -> str:
-        base = getattr(sys, "_MEIPASS", os.path.abspath("."))
-        return os.path.join(base, relative)
+        if hasattr(sys, "_MEIPASS"):
+            return os.path.join(sys._MEIPASS, relative)
+        from app.utils.file_manager import resolve  # import local para evitar ciclos de import
+        return resolve(relative)
+    
+    def reloadStyleSheet(self):
+        self.style().unpolish(self)
+        self.style().polish(self)
+        self.update()
+
+    def toggleWidgetVisible(self, widget: Qw.QWidget):
+        widget.setVisible(not widget.isVisible())
 
 class CMainWindow(CCore, Qw.QMainWindow):
     def __init__(self, window: Qw.QApplication = None, winName: str = "KaModel", winSize: tuple = (800,600), cssRelativePath: str = "", debug: bool = False, parent = None):
@@ -124,9 +167,9 @@ class CMainWindow(CCore, Qw.QMainWindow):
         if cssRelativePath: self.cssStyle = self.get_style(cssRelativePath); self.cssPath = cssRelativePath
         if window:
             self.edit_widget(self, setGeometry=(600,300,winSize[0],winSize[1]), show=None, setWindowTitle=winName)
-            self.setStyleSheet(self.cssStyle)
             self.setCentralWidget(self.create_widget(Qw.QStackedWidget, "stackedMenus"))
         self.debug = debug
+        self.shortcuts: dict = {}
         self.current_menu_index: int = None
     def showMenu(self, index: int, **kwargs): 
         self.get_widget("stackedMenus").setCurrentIndex(index)
@@ -134,12 +177,22 @@ class CMainWindow(CCore, Qw.QMainWindow):
         self.current_menu_index = index
     def addMenu(self, *widgets):
         for widget in widgets: self.get_widget("stackedMenus").addWidget(widget)
+    def addShortcut(self, name: str, keybind: str, callback) -> None:
+        self.shortcuts[name] = Qw.QShortcut(QtGui.QKeySequence(keybind), self)
+        self.shortcuts[name].activated.connect(callback)
 
 class CMenu(CCore, Qw.QWidget):
     def __init__(self, parent: any, **kwargs):
         super().__init__(parent, **kwargs)
         if "cssRelativePath" in kwargs: self.cssStyle = self.get_style(kwargs["cssRelativePath"])
         if "debug" in kwargs: self.debug = kwargs["debug"]
+
+    def showEvent(self, a0):
+        return super().showEvent(a0)
+    
+    def hideEvent(self, a0):
+        return super().hideEvent(a0)
+    
     def appear(self, **kwargs): self.show()
     def setAllStyleSheet(self, ss):
         for widget in self.widgets:
@@ -147,6 +200,81 @@ class CMenu(CCore, Qw.QWidget):
             if isinstance(widget, CFrame): widget.setAllStyleSheet(ss)
     def getMainWindow(self) -> CMainWindow:
         return self.parent().parent()
+
+class CContextMenu(Qw.QMenu):
+    def __init__(self, title: str, parent = None):
+        super().__init__(title, parent)
+        self.action_list: dict = {}
+        self.action_callbacks: dict = {}
+    
+    def add_action(self, key: str, name: str) -> Qw.QAction:
+        action = self.addAction(name)
+        self.action_list[key] = action
+        return action
+
+    def connect_action(self, action: str, callback) -> None:
+        self.action_list[action].triggered.connect(callback)
+        self.action_callbacks[action] = callback
+    
+    def add_defaults(self, start_with_sep: bool = True):
+        if start_with_sep: self.addSeparator()
+
+class CMenuBar(Qw.QMenuBar):
+    class FileMenu(CContextMenu):
+        def __init__(self, title: str = "File", parent = ...):
+            super().__init__(title, parent)
+        def add_defaults(self, start_with_sep = True):
+            super().add_defaults(start_with_sep)
+            self.add_action("new_file", "New file")
+            self.add_action("open_file", "Open File")
+            self.addSeparator()
+            self.add_action("save", "Save")
+            self.add_action("save_as", "Save As")
+            self.addSeparator()
+            self.add_action("exit", "Save and Exit")
+
+    class EditMenu(CContextMenu):
+        def __init__(self, title: str = "Edit", parent = ...):
+            super().__init__(title, parent)
+
+        def add_defaults(self, start_with_sep = True):
+            super().add_defaults(start_with_sep)
+            #self.add_action("preferences", "Preferences")
+            #self.add_action("auto_save", "Enable Auto Save")
+
+            self.add_action("undo", "Undo")
+            self.add_action("redo", "Redo")
+            self.addSeparator()
+            self.add_action("cut", "Cut")
+            self.add_action("copy", "Copy")
+            self.add_action("paste", "Paste")
+
+    class ViewMenu(CContextMenu):
+        def __init__(self, title: str = "View", parent = ...):
+            super().__init__(title, parent)
+            self.add_action("editor_appearance", "Editor Appearance")
+            self.add_action("chat", "Show Chat")
+            self.add_action("menu_bar", "Show Menu Bar")
+            self.addSeparator()
+            self.add_action("file_explorer", "Show File Explorer")
+            self.add_action("swap_chat_and_file_explorer", "Swap With Chat")
+            self.addSeparator()
+            self.add_action("tab_bar", "Show Tab Bar")
+
+    def __init__(self, parent = None):
+        super().__init__(parent)
+        self.menus: dict = {
+            "file": self.addMenu(self.FileMenu(parent=self)).menu(),
+            "edit": self.addMenu(self.EditMenu(parent=self)).menu()
+            # "view": self.addMenu(self.ViewMenu(parent=self)).menu()
+        }
+    def add_menu(self, name: str, Menu: CContextMenu, **menu_kwargs):
+        if not name in self.menus:
+            self.menus[name] = self.addMenu(Menu(parent=self, **menu_kwargs)).menu()
+    def set_menu_action_callback(self, name: str, action: str, callback):
+        self.menus[name].connect_action(action, callback)
+    def set_menu_action_keybind(self, name: str, action: str, keybind: str):
+        self.window().addShortcut(name, keybind, self.menus[name].action_callbacks[action])
 
 class Worker(QtCore.QThread):
     workerFinished = QtCore.pyqtSignal(object)
@@ -157,7 +285,7 @@ class Worker(QtCore.QThread):
     def run(self):
         if self.dictionaryWorkMode:
             joinedDatas: dict = {}
-            for func in self.runDatas:  
+            for func in self.runDatas:
                 newItems: tuple = tuple(func().items())
                 joinedDatas[newItems[0][0]] = newItems[0][1]
             self.workerFinished.emit(joinedDatas)
@@ -202,6 +330,12 @@ class AnimationFader(AnimationPlayer, Qw.QGraphicsOpacityEffect):
         def end_value_finished(): self.isPlaying = False; self.faderPlayer.finished.disconnect(end_value_finished)
         def unfade():
             if middleFunction: middleFunction()
+            # El contenido del menú (p. ej. la lista de proyectos) pudo haber creado widgets
+            # nuevos durante middleFunction(). Como este widget tiene un QGraphicsOpacityEffect
+            # aplicado, Qt puede seguir usando una versión "cacheada" de su render y no mostrar
+            # esos widgets nuevos hasta que algo fuerce un repintado (ej. mover el mouse encima).
+            # Forzamos ese repintado aquí, un tick después de que termine de procesarse el layout.
+            QtCore.QTimer.singleShot(0, self.parent().update)
             self.faderPlayer.finished.disconnect(unfade)
             if not skipEndValue: 
                 self.connect_signal((self.faderPlayer, ), {"finished": end_value_finished}, True)
@@ -217,17 +351,17 @@ class AnimationFader(AnimationPlayer, Qw.QGraphicsOpacityEffect):
         self.faderPlayer.stop()
         super().stop()
 
-class setVar():
-    def __init__(self, value: any, setterFunction: callable):
+class SetVar():
+    def __init__(self, value: any, callback: callable):
         self._value = value
-        self._setterFunction = setterFunction
+        self._callback = callback
     @property
     def value(self): return self._value
     @value.setter
     def value(self, new_value):
         if new_value != self._value:
             self._value = new_value
-            self._setterFunction()
+            self._callback(new_value)
 
 class CTextEdit(Qw.QTextEdit):
     def __init__(self, parent = None, enterConnection: callable = None, triggeredOnTextChanged: list[callable] = None):
@@ -260,12 +394,41 @@ class CTable(Qw.QTableWidget):
     def setHHeaderLabels(self, items: list): self.setHorizontalHeaderLabels(items)
     def setVHeaderLabels(self, items: list): self.setVerticalHeaderLabels(items)
 
+class CSplitter(Qw.QSplitter):
+    def __init__(self, parent = None):
+        super().__init__(parent)
+
+    def reverse_order(self, *widgets):
+        indexes: list = [self.indexOf(widget) for widget in widgets]
+        reversed_indexes: dict = {}
+        for i, index in enumerate(reversed(indexes)):
+            reversed_indexes[widgets[i]] = index
+        self.set_widgets_index(reversed_indexes)
+
+    def set_widgets_index(self, widgets: dict):
+        for widget, index in widgets.items():
+            self.insertWidget(index, widget)
+
+    def toggle_collapse_widget(self, widget: Qw.QWidget):
+        sizes = self.sizes()
+        w_index = self.indexOf(widget)
+        self.collapse(w_index, 0 if sizes[w_index] != 0 else widget.minimumWidth())
+
+    def collapse_widget(self, widget: Qw.QWidget):
+        self.collapse(self.indexOf(widget))
+
+    def collapse(self, index: int, size: int = 0):
+        sizes = self.sizes()
+        sizes[index] = size
+        self.setSizes(sizes)
+        
 class CFrame(CCore, Qw.QFrame):
     #could act as a card or just a frame that contains more widgets
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, parent, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        
+        self.setParent(parent)
+
         self.ltype = kwargs.get("layout", None)
         self.lname = kwargs.get("name", None)
         object_name = kwargs.get("object_name", None)
@@ -275,13 +438,17 @@ class CFrame(CCore, Qw.QFrame):
 
         self.setLayout(self.get_widget(self.lname, "layouts"))
     
+    def showEvent(self, a0):
+        super().showEvent(a0)
+        self.update_style_sheet()
+
     def setAllStyleSheet(self, ss):
         for widget in self.widgets:
             self.get_widget(widget).setStyleSheet(ss)
             if isinstance(widget, CFrame): widget.setAllStyleSheet(ss)
     
-    def addToLayout(self, items):
-        return super().addToLayout(self.get_widget(self.lname, "layouts"), items)
+    def addToLayout(self, items, to: object = None, from_where: str = None):
+        return super().addToLayout(to or self.get_widget(self.lname, "layouts"), items, from_where)
         
 class PollCLineEdit(CFrame):
     def __init__(self, *args, **kwargs):
@@ -304,3 +471,58 @@ class PollCLineEdit(CFrame):
         return self.get_widget("/title")
     def getLineEdit(self) -> object:
         return self.get_widget("/line-edit")
+
+class CTextEdit(CCore, Qw.QTextEdit):
+    return_pressed = QtCore.pyqtSignal()
+
+    def __init__(self, parent = None, *args, **kwargs):
+        super().__init__(parent, *args, **kwargs)
+        self.edit_widget(
+            self,
+            setMinimumHeight=36,
+            setMaximumHeight=120,
+            setSizePolicy=(Qw.QSizePolicy.Expanding, Qw.QSizePolicy.Minimum),
+            setVerticalScrollBarPolicy=QtCore.Qt.ScrollBarAlwaysOff,
+        )
+        self.document().contentsChanged.connect(self.adjust_height)
+
+    def keyPressEvent(self, e):
+        if e.key() == QtCore.Qt.Key_Return and not e.modifiers():
+            self.return_pressed.emit()
+        elif e.key() == QtCore.Qt.Key_Return and e.modifiers() == QtCore.Qt.ShiftModifier:
+            super().keyPressEvent(e)
+        else:
+            super().keyPressEvent(e)
+
+    def adjust_height(self):
+        doc_height = self.document().size().height()
+        new_height = max(36, min(int(doc_height) + 10, 120))
+        self.setFixedHeight(new_height)
+
+class CBridge(QtCore.QObject):
+    def __init__(self, parent=None, value = None):
+        super().__init__(parent)
+        self.value = None
+    
+        @QtCore.pyqtSlot(type(self.value))
+        def on_value_changed(value):
+            self.value = value
+            print("value: ", value)
+        self.on_value_changed = on_value_changed
+
+class CSideBarFileExplorer(Qw.QTreeView):
+    def __init__(self, parent = None, project_path: str = QtCore.QDir.rootPath()):
+        super().__init__(parent)
+        self.file_model = Qw.QFileSystemModel(self)
+        self.file_model.setRootPath(QtCore.QDir.rootPath())
+
+        self.setModel(self.file_model)
+        self.setRootIndex(self.file_model.index(project_path))
+        self.project_path = project_path
+
+#functions
+def create_timer(parent=None, time_out_callback=None, interval=500) -> QtCore.QTimer:
+    timer = QtCore.QTimer(parent)
+    timer.setInterval(interval)
+    if callable(time_out_callback): timer.timeout.connect(time_out_callback)
+    return timer
