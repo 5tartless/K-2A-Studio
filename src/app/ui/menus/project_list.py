@@ -57,7 +57,6 @@ class Project(qt.CFrame):
         if self.project_data:
             self.get_widget("/project-brief-data").setName(self.project_data["name"])
             self.get_widget("/project-brief-data").setPath(self.project_data["path"])
-            self.get_widget("/project-brief-data").setOnGithub("GitHub" if self.project_data["github-url"] else "Local")
             # self.get_widget("project-edit").setVersion()
 
     def init_project(self):
@@ -88,11 +87,10 @@ class ProjectBriefData(qt.CFrame):
 class ProjectEdit(qt.CFrame):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, layout=qt.Qw.QVBoxLayout, **kwargs)
-        self.edit_widget(self.create_widget(qt.Qw.QLabel, "/version"), setText="Version: Unknown", setObjectName="main")
-        self.edit_widget(self.create_widget(qt.Qw.QPushButton, "/edit"), setText="Edit", setObjectName="main")
+        self.edit_widget(self.create_widget(qt.Qw.QLabel, "/version"), setText="Version: Unknown")
+        self.edit_widget(self.create_widget(qt.Qw.QPushButton, "/edit"), setText="Edit")
 
         self.connect_signal((self.get_widget("/edit"),), {"clicked": self.clickedEdit})
-        self.get_widget(self.lname, "layouts").setSpacing(0)
         self.addToLayout(("/version", "/edit"))
 
     def setVersion(self, txt: str):

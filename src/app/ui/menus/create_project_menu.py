@@ -6,8 +6,8 @@ class CreateProjectMenu(K2A_Menu):
     def __init__(self, parent, **kwargs):
         super().__init__(parent, **kwargs)
         self.setAllStyleSheet(self.cssStyle)
-        
         self.edit_widget(self.create_widget(CreateBox, "/center/create-box", args={"layout": qt.Qw.QVBoxLayout, "name": "/center/create-box", "object_name": "main-top"}))
+
         self.addToLayout(self.get_widget("/center", "layouts"), "/center/create-box")
 
     def appear(self, **kwargs):

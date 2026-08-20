@@ -1,4 +1,4 @@
-from app.utils import CustomPyQt as qt, project_manager as pt
+from app.utils import CustomPyQt as qt, project_creator as pt
 
 class CloneRepo(qt.CFrame):
     def __init__(self, *args, **kwargs):
@@ -49,7 +49,10 @@ class PSCardRepo(qt.CFrame):
     def init_widgets(self):
         self.create_widget(qt.Qw.QStackedWidget, "/stack")
 
-        self.edit_widget(self.create_widget(qt.Qw.QLabel, "/icon"), setObjectName="main-top", setText="*ICON*")
+        import os
+        self.create_widget(qt.Qw.QLabel, "/icon")
+        self.get_widget("/icon").setPixmap(qt.QtGui.QPixmap(self.getAbsolutePath("src/app/ui/clone_icon.png")).scaled(48, 48, qt.QtCore.Qt.KeepAspectRatio, qt.QtCore.Qt.SmoothTransformation))
+        self.get_widget("/icon").setFixedSize(48, 48)
         self.edit_widget(self.create_widget(qt.Qw.QLabel, "/title"), setObjectName="main-top", setText="Import from GitHub")
         self.edit_widget(self.create_widget(qt.Qw.QLabel, "/subtitle"), setObjectName="main-top", setText="Cloud-Sync")
         self.edit_widget(self.create_widget(CloneRepo, "/clone-repo", args={"layout":qt.Qw.QVBoxLayout, "name": "/clone-repo", "object_name":"main"}))
@@ -59,3 +62,5 @@ class PSCardRepo(qt.CFrame):
         self.get_widget("/stack").addWidget(self.get_widget("/review-repo"))
         self.get_widget("/stack").addWidget(self.get_widget("/clone-repo"))
         self.get_widget("/stack").setCurrentIndex(0)
+        self.setFrameShape(qt.Qw.QFrame.NoFrame)
+

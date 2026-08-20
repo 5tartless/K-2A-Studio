@@ -1,11 +1,13 @@
 from app.utils import CustomPyQt as qt
 from app.ui.menus._basic_menu import K2A_Menu
+from PyQt5.QtGui import QPixmap
+from PyQt5.QtCore import Qt
 
 class HomeMenu(K2A_Menu):
     def __init__(self, parent, **kwargs):
         super().__init__(parent, **kwargs)
         self._center_titles_setup()
-        # self.setAllStyleSheet(self.cssStyle)
+        self.setAllStyleSheet(self.cssStyle)
     
     def import_menu(self): 
         main_window = self.getMainWindow()
@@ -43,7 +45,8 @@ class HomeMenu(K2A_Menu):
         self.edit_widget(self.create_widget(qt.Qw.QWidget, "/center/project/import"), setObjectName="main-top", setMaximumWidth=450, setMinimumWidth=200,
                         setLayout=self.create_layout(qt.Qw.QVBoxLayout, "/center/project/import"))
         
-        self.edit_widget(self.create_widget(qt.Qw.QLabel, "/center/project/import/icon"), setText="** IMPORT ICON **")
+        import_pixmap = QPixmap("src/app/ui/import_icon.png").scaled(64, 64, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        self.edit_widget(self.create_widget(qt.Qw.QLabel, "/center/project/import/icon"), setObjectName="main", setPixmap=import_pixmap)
         self.edit_widget(self.create_widget(qt.Qw.QLabel, "/center/project/import/text"), setText="You can import from a repository or a local folder.")
         self.edit_widget(self.create_widget(qt.Qw.QPushButton, "/center/project/import/button"), setText="Import")
         
@@ -52,7 +55,8 @@ class HomeMenu(K2A_Menu):
         self.edit_widget(self.create_widget(qt.Qw.QWidget, "/center/project/create"), setObjectName="main-top", setMaximumWidth=450, setMinimumWidth=200,
                         setLayout=self.create_layout(qt.Qw.QVBoxLayout, "/center/project/create"))
         
-        self.edit_widget(self.create_widget(qt.Qw.QLabel, "/center/project/create/icon"), setText="** CREATE ICON **")
+        create_pixmap = QPixmap("src/app/ui/create_icon.png").scaled(64, 64, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        self.edit_widget(self.create_widget(qt.Qw.QLabel, "/center/project/create/icon"), setObjectName="main", setPixmap=create_pixmap)
         self.edit_widget(self.create_widget(qt.Qw.QLabel, "/center/project/create/text"), setText=self.wrapText(
             "Create with AI assistance your own project structure that can later be moved towards a github repository.", 60))
         self.edit_widget(self.create_widget(qt.Qw.QPushButton, "/center/project/create/button"), setText="Create")

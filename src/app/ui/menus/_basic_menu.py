@@ -1,4 +1,6 @@
 from app.utils import CustomPyQt as qt
+from PyQt5.QtGui import QPixmap
+from PyQt5.QtCore import Qt
 
 class K2A_Menu(qt.CMenu):
     def __init__(self, parent, **kwargs):
@@ -34,7 +36,8 @@ class K2A_Menu(qt.CMenu):
     def _top_center_setup(self):
         self.edit_widget(self.create_widget(qt.Qw.QWidget, "/top"), setObjectName="main-top",
                         setFixedHeight=80, setLayout=self.create_layout(qt.Qw.QHBoxLayout, "/top"))
-        self.edit_widget(self.create_widget(qt.Qw.QLabel, "/top/logo"), setObjectName="main", setFixedWidth=64, setText="*LOGO*")
+        logo_pixmap = QPixmap("src/app/ui/logo.png").scaled(50, 50, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        self.edit_widget(self.create_widget(qt.Qw.QLabel, "/top/logo"), setObjectName="main", setFixedWidth=64, setPixmap=logo_pixmap)
         self.edit_widget(self.create_widget(qt.Qw.QWidget, "/top/nav-bar"), setObjectName="main", setLayout=self.create_layout(qt.Qw.QHBoxLayout, "/top/nav-bar"))
         self.edit_widget(self.create_widget(qt.Qw.QPushButton, "/top/nav-bar/button/home"), setText="Home")
         self.edit_widget(self.create_widget(qt.Qw.QPushButton, "/top/nav-bar/button/project-list"), setText="Projects")
