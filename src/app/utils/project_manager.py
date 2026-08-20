@@ -3,7 +3,7 @@ from app.utils.exit_code import EXIT_CODES
 from app.utils import file_manager as fm
 
 fm.os.environ["QTWEBENGINE_CHROMIUM_FLAGS"] = "--disable-gpu" #all of these should go to settings.
-fm.os.environ["QT_QPA_PLATFORM"] = "xcb"
+fm.os.environ["QT_QPA_PLATFORM"] = "windows"
 
 APP_DEFAULT_SETTINGS = {
     "projects": [

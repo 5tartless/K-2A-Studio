@@ -1,6 +1,17 @@
 import os, json, shutil
 from pathlib import Path
 
+# Raíz del proyecto (la carpeta que contiene "src"), calculada desde la ubicación real
+# de este archivo. Así no importa desde dónde se lance la app (VS Code, doble clic,
+# una terminal en otra carpeta, etc.): los archivos internos del proyecto siempre se
+# encuentran, en vez de depender del directorio de trabajo actual (cwd).
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
+
+def resolve(relative_path: str) -> str:
+    """Convierte una ruta relativa a la raíz del proyecto (ej: 'src/app/web/editor.html')
+    en una ruta absoluta real, sin depender del directorio de trabajo actual."""
+    return str(PROJECT_ROOT / relative_path)
+
 def read(path: str, useJson=False):
     content = None
     try:

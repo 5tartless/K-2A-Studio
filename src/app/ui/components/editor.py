@@ -49,7 +49,7 @@ class Editor(qt.CFrame):
         )
 
     def open_editor_html(self) -> str:
-        return fm.read(fm.os.path.abspath("src/app/web/editor.html"))
+        return fm.read(fm.resolve("src/app/web/editor.html"))
     
     def on_browser_load_finished(self):
         self.loaded = True
@@ -75,3 +75,21 @@ class Editor(qt.CFrame):
             f"window.editor.setValue({escaped});",
             lambda _: setattr(self, "_setting_code", False)
         )
+
+    def get_current_file_name(self) -> str:
+        if self.tab_manager and self.tab_manager.current_tid >= 0:
+            tab = self.tab_manager.get_tab(self.tab_manager.current_tid)
+            if tab:
+                return tab.title
+        return ""
+
+    def highlight_suggestions(self, suggestions: list) -> None:
+        """Resalta en amarillo los rangos de línea sugeridos por la IA, con tooltip al pasar el mouse."""
+        if not self.loaded or not suggestions:
+            return
+        escaped = fm.json.dumps(suggestions)
+        self.get_widget("/browser").page().runJavaScript(f"window.highlightSuggestions({escaped});")
+
+    def clear_suggestions(self) -> None:
+        if self.loaded:
+            self.get_widget("/browser").page().runJavaScript("window.clearSuggestions();")

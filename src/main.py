@@ -1,11 +1,19 @@
+import sys
+import os
+import subprocess
+from pathlib import Path
+
+os.environ["QT_QPA_PLATFORM"] = "windows"
+
+requirements = Path(__file__).resolve().parent.parent / "requirements.txt"
+subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", str(requirements)])
+
 from app.utils import CustomPyQt as qt, project_manager as pt
 from app.ui.menus.home_menu import HomeMenu
 from app.ui.menus.import_project_menu import ImportProjectMenu
 from app.ui.menus.create_project_menu import CreateProjectMenu
 from app.ui.menus.project_list import ProjectListMenu
 from app.ui.menus.project_editor import ProjectEditorMenu
-
-import sys
 
 class K2A_App(qt.CMainWindow):
     def __init__(self, window = None, winName = "KaModel", winSize = ..., cssRelativePath = "", debug = False, parent=None):

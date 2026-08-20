@@ -6,6 +6,15 @@
         * { margin: 0; padding: 0; box-sizing: border-box;}
         body { overflow: hidden; background: #1e1e1e;}
         #editor { width: 100vw; height: 100vh; overflow: hidden;}
+        .ai-suggestion-highlight {
+            background-color: rgba(255, 215, 0, 0.22);
+            border-bottom: 1px dashed rgba(255, 215, 0, 0.8);
+        }
+        .ai-suggestion-glyph {
+            background-color: gold;
+            width: 4px !important;
+            margin-left: 4px;
+        }
     </style>
 </head>
 <body>
@@ -30,6 +39,39 @@
                         alwaysConsumeMouseWheel: false
                     }
                 })
+
+                window.aiDecorations = [];
+
+                // suggestions: [{start_line, end_line, message}, ...]
+                window.highlightSuggestions = function(suggestions) {
+                    if (!window.editor || !Array.isArray(suggestions)) return;
+                    const lineCount = window.editor.getModel().getLineCount();
+                    const newDecorations = suggestions
+                        .filter(function(s) {
+                            return s.start_line >= 1 && s.start_line <= lineCount;
+                        })
+                        .map(function(s) {
+                            const endLine = Math.min(s.end_line || s.start_line, lineCount);
+                            return {
+                                range: new monaco.Range(s.start_line, 1, endLine, 1),
+                                options: {
+                                    isWholeLine: true,
+                                    className: 'ai-suggestion-highlight',
+                                    glyphMarginClassName: 'ai-suggestion-glyph',
+                                    glyphMarginHoverMessage: { value: s.message || 'Sugerencia de la IA' },
+                                    hoverMessage: { value: s.message || 'Sugerencia de la IA' }
+                                }
+                            };
+                        });
+                    window.aiDecorations = window.editor.deltaDecorations(window.aiDecorations, newDecorations);
+                    window.editor.updateOptions({ glyphMargin: newDecorations.length > 0 });
+                };
+
+                window.clearSuggestions = function() {
+                    if (!window.editor) return;
+                    window.aiDecorations = window.editor.deltaDecorations(window.aiDecorations, []);
+                    window.editor.updateOptions({ glyphMargin: false });
+                };
             })
         </script>
     </div>
