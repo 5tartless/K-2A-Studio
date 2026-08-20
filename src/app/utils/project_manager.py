@@ -3,7 +3,6 @@ from app.utils.exit_code import EXIT_CODES
 from app.utils import file_manager as fm
 
 fm.os.environ["QTWEBENGINE_CHROMIUM_FLAGS"] = "--disable-gpu" #all of these should go to settings.
-fm.os.environ["QT_QPA_PLATFORM"] = "windows"
 
 APP_DEFAULT_SETTINGS = {
     "projects": [
@@ -143,6 +142,10 @@ def get_parent_recursive(obj: object, recursions: int) -> object:
         if i == recursions:
             break
     return obj
+
+def path_exists(path: str) -> bool:
+    import os
+    return os.path.exists(path)
 
 def create_project(data: dict):
     file_content = read_app_config()
