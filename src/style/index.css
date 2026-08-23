@@ -6,6 +6,16 @@ body {
     color: #cdd6f4;
     font-family: "JetBrains Mono", monospace;
 }
+/* Target buttons and inputs when they are selected */
+.menu-button:focus, button:focus, input:focus, select:focus, textarea:focus {
+  outline: 2px solid #6060a3; 
+  outline-offset: 2px;
+}
+
+hr {
+    width: 100%;
+    border: 1px solid #7777cc;
+}
 
 /* header */
 .menu-header {
@@ -26,13 +36,15 @@ body {
     gap: 8px;
 }
 
-.menu-button {
+.menu-button, button.menu-button {
     user-select: none;
     text-decoration: none;
     border: 2px solid #454575;
     border-radius: 3px;
 
     background-color: transparent;
+    font-family: inherit;
+    font-size: inherit;
     color: #cdd6f4;
     padding: 0 2px 0 2px;
 
@@ -73,6 +85,10 @@ body {
     min-height: fit-content;
 }
 
+.card-title, .card-info {
+    text-align: center;
+} 
+
 .card .menu-button {
     display: flex;
     margin-top: auto;
@@ -80,7 +96,49 @@ body {
     justify-content: center;
 }
 
+/* create inputs */
+.create-inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.create-input-container {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+}
+
+.create-input-container button {
+    margin-bottom: 3px !important;
+    margin-bottom: 1px;
+}
+
+.create-action-container {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+    justify-content: center;
+}
+
 /* classes */
+
+.input-area {
+    display: flex;
+    flex-grow: 1;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.input-area input {
+    background-color: transparent;
+    border: 2px solid #454575;
+    border-radius: 8px;
+    padding: 4px;
+
+    color: #cdd6f4;
+}
+
 .textbox {
     max-height: 100px;
     min-height: 30px;

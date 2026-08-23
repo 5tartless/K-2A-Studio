@@ -1,26 +1,13 @@
 import react from "react";
-import MenuButton from "../../utils/linkButton";
+import ActionButton from "../../utils/actionButton";
 
-export default function HomeCard ({type, title, to}) {
+export default function Card ({title, description, inputComp, actionComp}) {
     return (
         <div className="card">
-            {/* {type === 'import' && (
-                <div className="card-icon">
-                    this is import.
-                </div>  
-            )} */}
-            <div className="card-info">
-                {type === 'import' ?
-                <p>
-                    Try importing an existing project from a github repository
-                    or from your local computer.
-                </p>:
-                <p>
-                    Create with AI assistance your own project structure that can later
-                    be moved into a github repository with just one order.
-                </p>}
-            </div>
-            <MenuButton to={to} title={title}/>
+            <h3 className="card-title">{title}</h3>
+            <div className="card-info">{description}</div>
+            {inputComp}
+            {actionComp}
         </div>
     )
 }
