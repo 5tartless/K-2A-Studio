@@ -1,54 +1,96 @@
-body{
+body {
     margin: 0;
     padding: 0;
-    background-color: #1f1f1f;
-    color: #f5f0f0;
+
+    background-color: #181825;
+    color: #cdd6f4;
+    font-family: "JetBrains Mono", monospace;
 }
 
-main {
-    width: 100vw;
-    height: 100vh;
-    box-sizing: border-box;
-}
-
-.v-container {
-    display: flex;
-    flex-direction: column;
-    box-sizing: border-box;
-}
-
-.h-container {
+/* header */
+.menu-header {
     display: flex;
     flex-direction: row;
-    box-sizing: border-box;
+    border-bottom: 2px solid #454575;
+    border-radius: 6px;
+
+    padding: 6px;
+    gap: 2px;
 }
 
-.project-container {
+.menu-header .options {
     display: flex;
-    gap: 10px;
-    padding: 10px;
+    flex-direction: row;
+    margin-left: auto;
+    
+    gap: 8px;
+}
+
+.menu-button {
+    user-select: none;
+    text-decoration: none;
+    border: 2px solid #454575;
+    border-radius: 3px;
+
+    background-color: transparent;
+    color: #cdd6f4;
+    padding: 0 2px 0 2px;
+
+    transition: background-color 0.5s;
+}
+
+.menu-button:hover {
+    background-color: #3b3b64;
+    font-weight: 600;
+}
+/* main-welcome */
+.main-welcome {
+    user-select: none;
+    text-align: center;
+    margin: 10px 0px;
+}
+/* cards */
+.card-view {
+    display: flex;
+    margin: 16px auto;
+    gap: 8px;
+
+    width: 80%;
+    max-width: 1000px;
 }
 
 .card {
-    display: grid;
-    gap: 10px;
-
-    margin-top: 10px;
-    text-align: center;
-    width: 50%;
-    background-color: #1a1a1a;
-    
-    border: 1px solid #4f4f4f;
-    border-radius: 8px;
-}
-
-.card button {
-    margin-top: auto;
-    height: fit-content;
-}
-
-.center-container {
     display: flex;
-    align-items: center;
+    flex: 1;
+    flex-direction: column;
+
+    border: 1px solid #454575;
+    border-bottom: 3px solid #3b3b64;
+    border-radius: 8px;
+    padding: 0 12px 0 12px;
+
+    height: 30vh;
+    min-height: fit-content;
+}
+
+.card .menu-button {
+    display: flex;
+    margin-top: auto;
+    margin-bottom: 6px;
     justify-content: center;
 }
+
+/* classes */
+.textbox {
+    max-height: 100px;
+    min-height: 30px;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    overflow-wrap: break-word;
+
+    white-space: pre-wrap;
+
+    font-size: 14px;
+    font-weight: 500;
+}
+
