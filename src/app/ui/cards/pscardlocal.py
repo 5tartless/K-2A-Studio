@@ -1,10 +1,12 @@
-from app.utils import CustomPyQt as qt, project_creator as pt
+from app.utils import CustomPyQt as qt, project_manager as pt
 
 class PSCardLocal(qt.CFrame):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.edit_widget(self.create_widget(qt.Qw.QLabel, "/icon"), setObjectName="main-top", setText="*ICON*")
+        self.create_widget(qt.Qw.QLabel, "/icon")
+        self.get_widget("/icon").setPixmap(qt.QtGui.QPixmap(self.getAbsolutePath("src/app/ui/selectD_image.png")).scaled(48, 48, qt.QtCore.Qt.KeepAspectRatio, qt.QtCore.Qt.SmoothTransformation))
+        self.get_widget("/icon").setFixedSize(48, 48)
         self.edit_widget(self.create_widget(qt.Qw.QLabel, "/title"), setObjectName="main-top", setText="Import Local Folder")
         self.edit_widget(self.create_widget(qt.Qw.QLabel, "/subtitle"), setObjectName="main-top", setText="Offline & Private")
 
@@ -83,4 +85,5 @@ class ButtonBox(qt.CFrame):
             self.parent().set_result_text(message)
             return
         self.cancel()
+        self.setFrameShape(qt.Qw.QFrame.NoFrame)
 

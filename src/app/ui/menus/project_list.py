@@ -1,4 +1,4 @@
-from app.utils import CustomPyQt as qt, project_creator as pt
+from app.utils import CustomPyQt as qt, project_manager as pt
 from app.ui.menus._basic_menu import K2A_Menu
 
 class ProjectListMenu(K2A_Menu):
@@ -70,15 +70,19 @@ class Project(qt.CFrame):
 class ProjectBriefData(qt.CFrame):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, layout=qt.Qw.QVBoxLayout, **kwargs)
-        self.edit_widget(self.create_widget(qt.Qw.QLabel, "/name"), setText="Unknown")
-        self.edit_widget(self.create_widget(qt.Qw.QLabel, "/path"), setText="Unknown")
+        self.edit_widget(self.create_widget(qt.Qw.QLabel, "/name"), setText="Unknown", setObjectName="main")
+        self.edit_widget(self.create_widget(qt.Qw.QLabel, "/path"), setText="Unknown", setObjectName="main")
+        self.edit_widget(self.create_widget(qt.Qw.QLabel, "/on-github"), setText="", setObjectName="main")
 
-        self.addToLayout(("/name", "/path"))
+        self.get_widget(self.lname, "layouts").setSpacing(0)
+        self.addToLayout(("/name", "/path", "/on-github"))
     
     def setName(self, txt):
         self.get_widget("/name").setText(txt)
     def setPath(self, txt):
         self.get_widget("/path").setText(txt)
+    def setOnGithub(self, txt):
+        self.get_widget("/on-github").setText(txt)
 
 class ProjectEdit(qt.CFrame):
     def __init__(self, *args, **kwargs):
@@ -91,8 +95,12 @@ class ProjectEdit(qt.CFrame):
 
     def setVersion(self, txt: str):
         self.get_widget("/version").setText(self.wrapText(txt, 20))
+    
     def clickedEdit(self):
-        pass
+        pt.get_parent_recursive(self, 8).showMenu(
+            4,
+            project_data=self.parent().project_data
+        )
 
 
 class NoProjectsFound(qt.CFrame):
@@ -103,6 +111,4 @@ class NoProjectsFound(qt.CFrame):
         self.edit_widget(self.create_widget(qt.Qw.QLabel, "/subtitle"), setText="You can go to home if you want to add a project.", setObjectName="main")
 
         self.addToLayout(("/title", "/subtitle"))
-
-
 

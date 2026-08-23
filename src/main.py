@@ -1,10 +1,11 @@
-from app.utils import CustomPyQt as qt, project_creator as pt
+import sys
+
+from app.utils import CustomPyQt as qt, project_manager as pt
 from app.ui.menus.home_menu import HomeMenu
 from app.ui.menus.import_project_menu import ImportProjectMenu
 from app.ui.menus.create_project_menu import CreateProjectMenu
 from app.ui.menus.project_list import ProjectListMenu
-
-import sys
+from app.ui.menus.project_editor import ProjectEditorMenu
 
 class K2A_App(qt.CMainWindow):
     def __init__(self, window = None, winName = "KaModel", winSize = ..., cssRelativePath = "", debug = False, parent=None):
@@ -14,18 +15,29 @@ class K2A_App(qt.CMainWindow):
         self.menu_fader = qt.AnimationFader(self.get_widget("stackedMenus"))
         self.addMenu(self.create_widget(HomeMenu, "homeMenu", createVisible=False, 
                                         args={"cssRelativePath": self.cssPath, "debug": self.debug}),
-                    self.create_widget(ImportProjectMenu, "importProjectMenu", createVisible=False,
-                                       args={"cssRelativePath": self.cssPath, "debug": self.debug}),
-                    self.create_widget(CreateProjectMenu, "createProjectMenu", createVisible=False,
-                                       args={"cssRelativePath": self.cssPath, "debug": self.debug}),
-                    self.create_widget(ProjectListMenu, "projectListMenu", createVisible=False, 
-                                        args={"cssRelativePath": self.cssPath, "debug": self.debug}))
-        self.showMenu(3)
-        
+            self.create_widget(ImportProjectMenu, "importProjectMenu", createVisible=False,
+                                args={"cssRelativePath": self.cssPath, "debug": self.debug}),
+            self.create_widget(CreateProjectMenu, "createProjectMenu", createVisible=False,
+                                args={"cssRelativePath": self.cssPath, "debug": self.debug}),
+            self.create_widget(ProjectListMenu, "projectListMenu", createVisible=False, 
+                                args={"cssRelativePath": self.cssPath, "debug": self.debug}),
+            self.create_widget(ProjectEditorMenu, "projectEditorMenu", createVisible=False, 
+                                args={"cssRelativePath": self.cssPath, "debug": self.debug})
+        )
+        self.showMenu(0)
+        self.setStyleSheet(self.cssStyle)
+    
+    def closeEvent(self, event):
+        if self.current_menu_index == 4:
+            tab_manager = self.get_widget("projectEditorMenu").get_widget("/tab-bar").get_tab_manager()
+            tab_manager.save_all_tabs()
+            if not tab_manager.are_all_tabs_saved(): 
+                event.ignore()
+                return
+        event.accept()
+
 if __name__ == "__main__":
     pt.setup()
-    print("uwu")
-    # ui init
     window = qt.Qw.QApplication(sys.argv)
     app = K2A_App(window, winSize=(1080,720), cssRelativePath="src/css/style.css", debug=True)
 
