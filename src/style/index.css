@@ -81,7 +81,6 @@ hr {
     border-radius: 8px;
     padding: 0 12px 0 12px;
 
-    height: 30vh;
     min-height: fit-content;
 }
 
@@ -119,6 +118,80 @@ hr {
     gap: 8px;
     margin-top: 16px;
     justify-content: center;
+}
+
+/* projectList */
+
+.project-list {
+    display: flex;
+    flex-direction: column;
+    padding: 0 8px;
+    gap: 8px;
+}
+
+.project {
+    display: flex;
+
+    list-style-type: none;
+    border: 1px solid #454575;
+    border-bottom: 3px solid #454575;
+    border-radius: 6px;
+
+    padding: 12px;
+}
+
+.project .menu-button {
+    margin-left: auto;
+    height: min-content;
+    align-self: flex-end;
+}
+
+.project-details {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.project-name {
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.project-path, .project-version {
+    background-color: #454575;
+    border-radius: 6px;
+    padding: 1px 4px;
+}
+
+/* searchbar */
+
+.search-bar {
+    display: flex;
+    justify-content: center;
+    margin-left: 0 auto;
+
+    gap: 6px;
+    padding: 12px 0 0 0;
+
+}
+.search-bar input {
+    background-color: transparent;
+    color: #cdd6f4;
+    border: 2px solid #7777cc;
+    border-radius: 6px;
+
+    padding: 6px;
+    width: 50vw;
+    max-width: 800px;
+
+    font-size: 14px;
+    font-weight: 600;
+    outline: none;
+}
+.search-bar .menu-button {
+    width: 36px;
+    border-radius: 8px;
+    outline: none;
 }
 
 /* classes */

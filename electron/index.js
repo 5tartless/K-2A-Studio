@@ -11,6 +11,7 @@ const createWindow = () => {
             preload: path.join(__dirname, 'preload.js')
         }
     })
+
     window.webContents.on('before-input-event', (event, input) => {
         if (input.type === 'keyDown' && input.key === 'F12') {
             window.webContents.toggleDevTools()
@@ -22,8 +23,6 @@ const createWindow = () => {
             event.preventDefault()
         }
     })
-    
-    
 
     if (process.env.VITE_DEV_SERVER_URL) {
         window.loadURL(process.env.VITE_DEV_SERVER_URL)
