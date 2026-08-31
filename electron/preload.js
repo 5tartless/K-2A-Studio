@@ -1,3 +1,5 @@
-const { contextBridge } = require('electron')
+const { contextBridge, ipcRenderer } = require('electron')
 
-contextBridge.exposeInMainWorld("test", () => "it works!")
+contextBridge.exposeInMainWorld("electronAPI", {
+    onToggleChat: (callback) =>  ipcRenderer.on('view:toggle-chat', (_event) => callback())
+})

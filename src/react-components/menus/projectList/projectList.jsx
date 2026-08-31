@@ -1,6 +1,6 @@
 import react, { version } from "react";
 import MenuHeader from "../../layouts/menu-header";
-import ActionButton from "../../utils/actionButton";
+import LinkButton from "../../utils/linkButton";
 import SearchBar from "../../utils/searchBar";
 
 function Project ({name, path, version}) {
@@ -11,7 +11,7 @@ function Project ({name, path, version}) {
                 <span className="project-path">Path: {path}</span>
                 <span className="project-version">Version: {version}</span>
             </div>
-            <ActionButton text='Edit'/>
+            <LinkButton title='Edit' to='/editor'/>
         </li>
     )
 }

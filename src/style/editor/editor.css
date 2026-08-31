@@ -1,0 +1,152 @@
+.main-container {
+    display: flex;
+    flex-direction: row;
+    margin: 12px 6px 6px;
+
+    flex: 1;
+    gap: 4px;
+
+    overflow: hidden;
+}
+.left {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+
+    border: 2px solid #454575;
+    border-radius: 6px;
+    padding: 8px;
+
+    width: 375px;
+    min-width: 30vw;
+    max-width: 70vw;
+
+    overflow: hidden;
+}
+.chat-container {
+
+    display: flex;
+    flex-direction: column;
+    margin-top: 10px;
+    padding: 4px;
+
+    flex-grow: 1;
+}
+.chat-scroll {
+    display: flex;
+    flex-direction: column;
+
+    margin: 12px 0px;
+    gap: 8px;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+.chat-message {
+    display: block;
+    box-sizing: border-box;
+    
+    width: fit-content;
+    max-width: 80%;
+    
+    padding: 6px;
+    border-radius: 10px;
+
+    word-wrap: break-word;
+}
+.chat-message-right {
+    border-top-right-radius: 0px;
+    text-align: end;
+    background-color: #3b3b64;
+    margin-left: auto;
+}
+.chat-message-left {
+    border-top-left-radius: 0px;
+    text-align: left;
+    background-color: #272742;
+    margin-right: auto;
+}
+
+.prompt-container {
+    display: flex;
+    gap: 4px;
+    margin: auto 4px 8px;
+    border: 2px solid #7777cc;
+    border-radius: 6px;
+    
+    padding: 6px;
+}
+.prompt-input {
+    /* background-color: #454575; */
+    background-color: transparent;
+    color: #cdd6f4;
+    border: none;
+
+    resize: none;
+    width: 100%;
+
+    min-height: 26px;
+    max-height: 120px;
+
+    outline: none !important;
+    font-size: 14px;
+    overflow: hidden;
+
+    word-wrap: break-word;
+}
+.input-max {
+    overflow-y: auto;
+
+    /* scrollbar-color: #454575 transparent; */
+    /* scrollbar-width: thin; */
+}
+.input-max::-webkit-scrollbar {
+    width: 6px;
+}
+.input-max::-webkit-scrollbar-thumb,
+.input-max::-webkit-scrollbar-track {
+    cursor: default;
+}
+
+.input-max::-webkit-scrollbar-thumb {
+    background-color: #454575;
+    border-radius: 8px;
+}
+
+.prompt-actions {
+    margin: auto 0 2px;
+}
+
+.editor {
+    background-color: white;
+    border: 2px solid #454575;
+    border-radius: 6px;
+    
+    flex: 1;
+
+    overflow: auto;
+}
+.code-mirror {
+    color: #272742;
+    width: max-content;
+    min-width: 100%;
+    height: max-content;
+}
+.right {
+    max-width: 292px;
+}
+
+.splitter {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 6px;
+    height: 100%;
+    background-color: transparent;
+    user-select: none;
+
+    transition: background-color 0.25s;
+}
+.splitter:hover {
+    background-color: #454575;
+    cursor: col-resize;
+}

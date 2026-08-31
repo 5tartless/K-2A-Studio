@@ -10,6 +10,15 @@
   "keywords": [],
   "type": "commonjs",
   "devDependencies": {
+    "@codemirror/autocomplete": "^6.20.3",
+    "@codemirror/commands": "^6.11.0",
+    "@codemirror/lang-javascript": "^6.2.5",
+    "@codemirror/language": "^6.12.4",
+    "@codemirror/lint": "^6.9.7",
+    "@codemirror/search": "^6.7.1",
+    "@codemirror/state": "^6.7.1",
+    "@codemirror/view": "^6.43.9",
+    "codemirror": "^6.0.2",
     "electron": "^43.4.1",
     "standard": "^17.1.2"
   },

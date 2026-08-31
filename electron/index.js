@@ -2,7 +2,6 @@ const { app, BrowserWindow, Menu} = require('electron')
 const path = require('path')
 
 //completely destroys the default application menu that electron provides
-Menu.setApplicationMenu(null)
 const createWindow = () => {
     const window = new BrowserWindow({
         width: 800,
@@ -11,6 +10,20 @@ const createWindow = () => {
             preload: path.join(__dirname, 'preload.js')
         }
     })
+
+    const menu = Menu.buildFromTemplate([
+        {
+            label: 'view',
+            submenu: [
+                {
+                    click: () => window.webContents.send('view:toggle-chat'),
+                    label: 'Toggle Chat',
+                    accelerator: 'CommandOrControl+Alt+C'
+                }
+            ]
+        }
+    ])
+    Menu.setApplicationMenu(menu)
 
     window.webContents.on('before-input-event', (event, input) => {
         if (input.type === 'keyDown' && input.key === 'F12') {
