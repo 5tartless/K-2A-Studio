@@ -1,8 +1,26 @@
-## This is an experimental version for the future of K2A-Studio.
-This experiment is entirely developed by 5tartless.
-If it overcomes in someway or results promising to everyone then pyqt5 will get replaced.
-It's an Experiment.
+# K2A-Studio Electron
 
-The main idea is to convert K2A-Studio into an Electron app that links with python for AI communication. Allowing us to improve communication between your code and app; making the app feel modern and more polished visually.
+_Made with **electron, react + vite**._
+This is an **EXPERIMENT** entirely developed by `5tartless`.
 
-Pyqt5 isn't bad. But I still want to experiment with Electron just because it seems promising and we have gained web development experience.
+>_**Note:** If it overcomes in someway or results promising to everyone then pyqt5 will get replaced._
+
+The main idea is to convert **K2A-Studio** into an **Electron App** that links with _Python for AI communication_.
+
+Allowing us to **improve communication between your code and our service**; making the app feel modern and more polished visually.
+
+---
+
+## Current progress
+
+* Current objective: `Catch up` _**`to the main branch.`**_
+
+### Project Editor Part 1 `0.03.1v`
+
+* Added Code Mirror instead of Monaco Editor
+**( May change )**
+  * Only supports **javascript sintax**
+* Added Chat for Ollama Qwen 3:4b
+**( Useless for now )**
+  * Chat can be expanded sideways.
+  * Chat can be toggled with Ctrl+Alt+C, or with the app menu.
