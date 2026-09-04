@@ -1,24 +1,31 @@
-import react from "react"
+import { useEffect, useRef } from "react"
 import ActionLine from "../../utils/actionLine"
 import Splitter from "../../utils/spliter"
 
-export default function Chat() {
+export function Chat ({ messages }) {
+    const scrollRef = useRef(null)
+    useEffect(() => { //fires everytime a new message is thrown
+        if (!scrollRef) return
+
+        const scroll = scrollRef.current
+        scroll.scrollTop = scroll.scrollHeight        
+    }, [messages])
+
     return (
         <div className="chat-container">
-            <div className="chat-scroll">
-                <ChatMessage message={
-                    'what? wosa this works so good that i think its just better than k2a-python'
-                } mType="right"/>
-                <ChatMessage message={
-                    'what? wosa this works so good that i think its just better than k2a-python'
-                } mType="left"/>
+            <div ref={scrollRef} className="chat-scroll">
+                {
+                    messages.map(
+                        (value, index) => <ChatMessage key={index} message={value} mType="right"/>
+                    )
+                }
             </div>
-            <Splitter/>
+            <Splitter left={true}/>
         </div>
     )
 }
 
-export function ChatMessage ({message, mType = 'right'}) {
+export function ChatMessage ({ message, mType = 'right' }) {
     return (
         <div className={`chat-message chat-message-${mType}`}>{message}</div>
     )

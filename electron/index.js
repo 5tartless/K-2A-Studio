@@ -13,7 +13,7 @@ const createWindow = () => {
 
     const menu = Menu.buildFromTemplate([
         {
-            label: 'view',
+            label: 'View',
             submenu: [
                 {
                     click: () => window.webContents.send('view:toggle-chat'),

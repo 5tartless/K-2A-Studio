@@ -33,8 +33,9 @@ main {
     outline: 2px solid #6060a3; 
     outline-offset: 2px;
 }
-
-
+::selection {
+    background-color: #7777cc;
+}
 
 hr {
     width: 100%;
@@ -250,3 +251,22 @@ hr {
     font-weight: 500;
 }
 
+.splitter {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 6px;
+    height: 100%;
+    background-color: transparent;
+    user-select: none;
+
+    transition: background-color 0.25s;
+}
+.splitter:hover {
+    background-color: #454575;
+    cursor: col-resize;
+}
+
+.hidden {
+    display: none !important;
+}

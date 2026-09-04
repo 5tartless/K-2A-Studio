@@ -15,7 +15,26 @@ Allowing us to **improve communication between your code and our service**; maki
 
 * Current objective: `Catch up` _**`to the main branch.`**_
 
-### Project Editor Part 1 `0.03.1v`
+### Project Editor Part 2 `v0.03.2`
+
+* Added chat features:
+  * The user can now send messages
+  * Chat auto scrolls down when new message is sent.
+  * No Assistant feature for now.
+
+* Changed how code mirror was implemented.
+  * Improved code in general.
+  * Removed support for javascript (Bug)
+
+* Added tabs:
+  * For now there are pre-fabricated tabs just for testing.
+  * Each tab contains code information separately.
+  * Added new history for tabs.
+    * When closing your current tab it relocates you to the latest one open.
+
+---
+
+### Project Editor Part 1 `v0.03.1`
 
 * Added Code Mirror instead of Monaco Editor
 **( May change )**
